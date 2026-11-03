@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="styles.css">
+<style>
+body{margin:0;background:var(--color-bg)}
+a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-900)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+input[type=checkbox]{accent-color:var(--color-accent-700);width:15px;height:15px;cursor:pointer;margin:0}
+input[type=checkbox]:disabled{cursor:not-allowed;opacity:.4}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;font-family:var(--font-body);color:var(--color-text)">
+<header style="position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:24px;height:56px;padding:0 28px;background:var(--color-bg);border-bottom:1px solid var(--color-divider)">
+  <button onClick="{{ goHome }}" aria-label="All profiles" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;min-width:0;flex:none">
+    <div style="width:22px;height:22px;background:var(--color-accent-900);display:grid;place-items:center;color:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:13px">F</div>
+    <div style="font-family:var(--font-heading);font-weight:600;font-size:17px;letter-spacing:-0.01em">Finance Agent</div>
+    <div style="font-size:12px;color:var(--color-neutral-700);padding-left:10px;border-left:1px solid var(--color-divider)">Company Profile</div>
+  </button>
+  <nav aria-label="Progress" style="flex:1;display:flex;justify-content:center;align-items:center;gap:6px">
+    <sc-if value="{{ inJob }}"><div style="display:flex;align-items:center;gap:6px">
+    <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:6px">
+        <button onClick="{{ s.go }}" disabled="{{ s.locked }}" aria-current="{{ s.current }}" style="{{ s.style }}">
+          <span style="{{ s.numStyle }}">{{ s.n }}</span>
+          <span>{{ s.label }}</span>
+        </button>
+        <sc-if value="{{ s.notLast }}" hint-placeholder-val="{{ true }}"><span style="width:28px;min-width:8px;flex-shrink:1;height:1px;background:var(--color-divider)"></span></sc-if>
+      </div>
+    </sc-for>
+    </div></sc-if>
+  </nav>
+  <div style="flex:none;display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:12px;color:var(--color-neutral-700)">
+    <span>TMT Coverage</span>
+    <span style="width:28px;height:28px;border:1px solid var(--color-divider);display:grid;place-items:center;font-size:11px;font-weight:500;color:var(--color-text)">JO</span>
+  </div>
+</header>
+
+<main style="flex:1;width:100%;max-width:1280px;margin:0 auto;padding:36px 28px 64px;box-sizing:border-box">
+
+<!-- HOME -->
+<sc-if value="{{ isHome }}">
+<div style="max-width:1180px;margin:0 auto;animation:fadeup .3s ease both">
+  <div style="display:flex;align-items:flex-end;gap:24px;margin-bottom:24px;flex-wrap:wrap">
+    <div style="flex:1;min-width:280px">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:8px">TMT Coverage · Deal workspace</div>
+      <h1 style="font-size:40px;margin:0 0 6px">Company profiles</h1>
+      <p style="color:var(--color-neutral-700);margin:0;max-width:560px;text-wrap:pretty">One-pagers generated from approved deal materials. Open a profile to continue where it left off.</p>
+    </div>
+    <button class="btn btn-primary blueprint" onClick="{{ newProfile }}" style="min-height:40px;padding:0 18px;font-size:15px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New profile</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+    <div class="seg" role="radiogroup" aria-label="Filter profiles"><sc-for list="{{ filterOpts }}" as="fo"><label class="seg-opt"><input type="radio" name="profilefilter" checked="{{ fo.checked }}" onChange="{{ fo.onChange }}">{{ fo.label }}</label></sc-for></div>
+    <div style="margin-left:auto;position:relative;width:min(280px,100%)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="position:absolute;left:10px;top:11px;color:var(--color-neutral-600)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input class="input" value="{{ q }}" onChange="{{ setQ }}" placeholder="Search company" aria-label="Search profiles" style="padding-left:32px"></div>
+  </div>
+  <div class="blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <div style="display:grid;grid-template-columns:minmax(0,2fr) 92px minmax(0,1.7fr) 126px 70px;gap:0 12px;align-items:center;padding:0 16px;min-height:36px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider)"><div>Company</div><div>Stage</div><div>Status</div><div>Generated</div><div></div></div>
+    <sc-for list="{{ homeRows }}" as="j">
+      <div role="button" tabindex="0" onClick="{{ j.open }}" onKeyDown="{{ j.key }}" style="box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,2fr) 92px minmax(0,1.7fr) 126px 70px;gap:0 12px;align-items:center;width:100%;padding:12px 16px;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent)" style-hover="background:color-mix(in srgb, var(--color-accent) 6%, transparent)">
+        <div style="min-width:0"><div style="font-size:14px;font-weight:500">{{ j.company }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ j.archive }}</div></div>
+        <div style="display:flex;gap:2px"><sc-for list="{{ j.pips }}" as="p"><span style="{{ p }}"></span></sc-for></div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start"><span style="{{ j.statusStyle }}">{{ j.statusLabel }}</span><span style="font-size:12px;color:var(--color-neutral-800)">{{ j.next }}</span></div>
+        <div style="font-size:12.5px;color:var(--color-neutral-700);font-variant-numeric:tabular-nums">{{ j.updated }}</div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;color:var(--color-neutral-600)"><button class="btn btn-icon" onClick="{{ j.askDelete }}" aria-label="{{ j.deleteLabel }}" title="Delete profile" style="width:30px;height:30px;border-color:transparent;color:var(--color-neutral-700)" style-hover="color:oklch(0.45 0.14 28);border-color:oklch(0.8 0.07 28);background:oklch(0.97 0.012 28)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M10 11v6M14 11v6"></path></svg></button><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"></path></svg></div>
+      </div>
+    </sc-for>
+    <sc-if value="{{ homeEmpty }}"><div style="padding:40px 24px;text-align:center;font-size:13px;color:var(--color-neutral-700)">No persisted profiles match this filter.</div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ inJob }}"><div style="max-width:1180px;margin:-16px auto 20px;display:flex;align-items:center;gap:8px;font-size:13px"><button class="btn btn-ghost" onClick="{{ goHome }}" style="font-family:var(--font-body);font-size:13px;color:var(--color-neutral-800)">← All profiles</button><span style="color:var(--color-neutral-500)">/</span><span style="font-weight:500">{{ company }}</span></div></sc-if>
+
+<!-- INTAKE -->
+<sc-if value="{{ isIntake }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:48px;max-width:1080px;margin:0 auto;animation:fadeup .3s ease both">
+  <div>
+    <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:8px">Step 01 — Intake</div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+      <h1 style="font-size:40px;margin:0">New company profile</h1>
+      <button class="btn btn-secondary" onClick="{{ demoPrefill }}" disabled="{{ demoPrefillDisabled }}">Demo prefill</button>
+    </div>
+    <p style="color:var(--color-neutral-700);max-width:560px;margin:0 0 32px;text-wrap:pretty">Name the company and attach its materials. A lightweight intake agent will propose the source set; report analysis waits for your approval.</p>
+
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div class="field">
+        <label for="co">Company name <span style="color:var(--color-accent-700)">*</span></label>
+        <input id="co" class="input" value="{{ company }}" onChange="{{ setCompany }}" placeholder="e.g. Acme Technologies" style="font-size:16px;min-height:42px">
+      </div>
+      <div class="field">
+        <label for="ctx">Context or instructions <span style="color:var(--color-neutral-600)">— optional</span></label>
+        <textarea id="ctx" class="input" value="{{ context }}" onChange="{{ setContext }}" placeholder="What should the profile emphasise?" style="min-height:84px"></textarea>
+        <div style="font-size:12px;color:var(--color-neutral-700);margin-top:5px">Steers emphasis and section ordering. It does not add sources or override evidence.</div>
+      </div>
+
+      <div class="field">
+        <label>Company materials <span style="color:var(--color-neutral-600)">— one ZIP, optional</span></label>
+        <input type="file" ref="{{ fileRef }}" onChange="{{ onFileInput }}" style="display:none">
+
+        <sc-if value="{{ up.none }}" hint-placeholder-val="{{ true }}">
+          <div onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDrop }}" style="{{ dropStyle }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-accent-700)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <div style="font-size:15px">Drop a ZIP here or <button onClick="{{ browse }}" class="btn btn-ghost" style="font-size:15px;font-family:var(--font-body);padding:0 2px;color:var(--color-accent-700);text-decoration:underline;text-underline-offset:3px">choose a file</button></div>
+            <div style="font-size:12px;color:var(--color-neutral-700)">.zip only · max 100 MB · up to 250 files inside</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ up.busy }}">
+          <div class="blueprint" style="padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="display:flex;align-items:center;gap:12px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-accent-700);flex:none"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ up.name }}</div>
+                <div style="font-size:12px;color:var(--color-neutral-700)">{{ up.label }}</div>
+              </div>
+              <div style="font-family:var(--font-heading);font-size:18px;font-variant-numeric:tabular-nums">{{ up.pct }}</div>
+              <button class="btn btn-icon" onClick="{{ clearUpload }}" aria-label="Cancel upload" style="width:30px;height:30px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+            </div>
+            <div style="height:3px;background:var(--color-neutral-300)"><div style="{{ up.barStyle }}"></div></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ up.done }}">
+          <div class="blueprint" style="padding:16px 18px;display:flex;align-items:center;gap:12px;animation:fadeup .3s ease both">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="width:28px;height:28px;flex:none;background:var(--color-accent-100);color:var(--color-accent-800);display:grid;place-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ up.name }}</div>
+              <div style="font-size:12px;color:var(--color-neutral-700)">{{ up.label }}</div>
+            </div>
+            <button class="btn btn-secondary" onClick="{{ browse }}">Replace</button>
+            <button class="btn btn-ghost" onClick="{{ clearUpload }}">Remove</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ up.error }}">
+          <div role="alert" style="padding:16px 18px;display:flex;gap:12px;border:1px solid oklch(0.78 0.08 28);background:oklch(0.965 0.015 28);animation:fadeup .25s ease both">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:oklch(0.48 0.15 28);flex:none;margin-top:1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+            <div style="flex:1">
+              <div style="font-weight:500;font-size:14px;color:oklch(0.4 0.13 28)">{{ up.errTitle }}</div>
+              <div style="font-size:13px;margin-top:2px">{{ up.errMsg }}</div>
+              <div style="font-size:12px;color:var(--color-neutral-700);margin-top:6px">{{ up.name }} · {{ up.sizeLabel }}</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:flex-start">
+              <button class="btn btn-secondary" onClick="{{ browse }}">Choose another file</button>
+              <button class="btn btn-ghost" onClick="{{ clearUpload }}">Dismiss</button>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+
+      <div style="display:flex;align-items:center;gap:16px;padding-top:18px;border-top:1px solid var(--color-divider)">
+        <button class="btn btn-primary blueprint" onClick="{{ toReview }}" disabled="{{ cantContinue }}" style="min-height:40px;padding:0 20px;font-size:15px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          Continue to source review
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+        </button>
+        <span style="font-size:13px;color:var(--color-neutral-700)">{{ continueHint }}</span>
+      </div>
+    </div>
+  </div>
+
+  <aside style="display:flex;flex-direction:column;gap:20px;padding-top:62px">
+    <div class="card blueprint" style="padding:18px;gap:10px">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div class="card-kicker" style="color:var(--color-accent-700)">Read inside the ZIP</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <span class="tag tag-neutral">PDF</span><span class="tag tag-neutral">DOCX</span><span class="tag tag-neutral">PPTX</span><span class="tag tag-neutral">XLSX / XLSM</span><span class="tag tag-neutral">CSV</span><span class="tag tag-neutral">TXT</span>
+      </div>
+      <div style="font-size:12px;color:var(--color-neutral-700);line-height:1.5">Not read: images, audio, video, password-protected or corrupted files. They’ll be listed as unreadable.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--color-divider);border:1px solid var(--color-divider);margin-top:4px">
+        <div style="background:var(--color-bg);padding:10px"><div style="font-family:var(--font-heading);font-size:22px;font-weight:600">100 MB</div><div style="font-size:11px;color:var(--color-neutral-700)">Max ZIP size</div></div>
+        <div style="background:var(--color-bg);padding:10px"><div style="font-family:var(--font-heading);font-size:22px;font-weight:600">250</div><div style="font-size:11px;color:var(--color-neutral-700)">Max files</div></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--color-neutral-700);line-height:1.55;padding:0 4px">Approved files are copied into an isolated E2B sandbox and sent to the configured model provider during analysis. You approve every source before analysis begins.</div>
+  </aside>
+</div>
+</sc-if>
+
+<!-- REVIEW -->
+<sc-if value="{{ isReview }}">
+<div style="animation:fadeup .3s ease both">
+  <div style="display:flex;align-items:flex-end;gap:24px;margin-bottom:22px">
+    <div style="flex:1">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:8px">Step 02 — Source review</div>
+      <h1 style="font-size:40px;margin:0 0 6px">Review analysis inputs</h1>
+      <p style="color:var(--color-neutral-700);margin:0;max-width:680px;text-wrap:pretty">Only approved sources will be used in the analysis. Excluded files are not read, cited or retained in the profile.</p>
+    </div>
+  </div>
+
+  <sc-if value="{{ revising }}">
+    <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 16px;margin-bottom:18px;border:1px solid var(--color-accent-300);background:var(--color-accent-100)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-accent-800);flex:none;margin-top:2px"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+      <div style="flex:1;font-size:13px;color:var(--color-accent-900)">
+        <div style="font-weight:500">Revising sources for profile v{{ reportV }}</div>
+        <div>{{ revisionNote }}</div>
+        <sc-for list="{{ impacts }}" as="im"><div style="margin-top:2px">→ {{ im }}</div></sc-for>
+      </div>
+      <button class="btn btn-ghost" onClick="{{ backToReport }}">Discard changes</button>
+    </div>
+  </sc-if>
+
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start">
+    <div>
+      <div style="display:flex;align-items:center;gap:14px;padding:10px 0 12px;flex-wrap:wrap">
+        <div style="font-size:14px;font-variant-numeric:tabular-nums;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <strong style="font-weight:500">{{ sum.detected }} files detected</strong>
+          <span style="color:var(--color-neutral-500)">·</span><span>{{ sum.included }} included</span>
+          <span style="color:var(--color-neutral-500)">·</span><span>{{ sum.excluded }} excluded</span>
+          <sc-if value="{{ sum.hasBad }}"><span style="display:flex;gap:8px"><span style="color:var(--color-neutral-500)">·</span><span style="color:oklch(0.45 0.14 28)">{{ sum.bad }} unreadable</span></span></sc-if>
+          <span style="color:var(--color-neutral-500)">·</span><span>{{ sum.size }} selected</span>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-secondary" onClick="{{ selAll }}" disabled="{{ noFiles }}">Select all</button>
+          <button class="btn btn-secondary" onClick="{{ selNone }}" disabled="{{ noFiles }}">Deselect all</button>
+        </div>
+      </div>
+
+      <div class="blueprint">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="display:grid;grid-template-columns:40px minmax(0,2.6fr) 52px 70px 92px 96px minmax(0,1.25fr) 92px 40px;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);min-height:36px">
+          <div style="display:grid;place-items:center"><input type="checkbox" aria-label="Select all" checked="{{ allOn }}" onChange="{{ toggleAll }}" disabled="{{ noFiles }}"></div>
+          <div>File</div><div>Type</div><div style="text-align:right;padding-right:14px">Size</div><div>Doc date</div><div>Relevance</div><div>Sensitivity</div><div>Status</div><div></div>
+        </div>
+        <sc-for list="{{ rows }}" as="f" hint-placeholder-count="8">
+          <div style="{{ f.rowStyle }}">
+            <div style="display:grid;place-items:center"><input type="checkbox" aria-label="Include file" checked="{{ f.inc }}" disabled="{{ f.bad }}" onChange="{{ f.toggle }}"></div>
+            <div style="min-width:0;padding:9px 12px 9px 0">
+              <button onClick="{{ f.open }}" style="all:unset;cursor:pointer;display:block;max-width:100%;font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" style-hover="color:var(--color-accent-700);text-decoration:underline;text-underline-offset:3px">{{ f.n }}</button>
+              <div style="{{ f.subStyle }}">{{ f.sub }}</div>
+            </div>
+            <div style="font-size:12px;color:var(--color-neutral-700)">{{ f.t }}</div>
+            <div style="font-size:13px;text-align:right;padding-right:14px;font-variant-numeric:tabular-nums">{{ f.size }}</div>
+            <div style="{{ f.dateStyle }}">{{ f.date }}</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <span style="display:flex;gap:2px"><sc-for list="{{ f.relPips }}" as="p"><span style="{{ p }}"></span></sc-for></span>
+              <span>{{ f.relLabel }}</span>
+            </div>
+            <div style="min-width:0"><span style="{{ f.sensStyle }}">{{ f.sens }}</span></div>
+            <div><span style="{{ f.statusStyle }}">{{ f.status }}</span></div>
+            <div style="display:grid;place-items:center"><button class="btn btn-icon" onClick="{{ f.open }}" aria-label="Preview file" style="width:30px;height:30px;border-color:transparent"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noFiles }}">
+          <div style="padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-neutral-600)"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <div style="font-family:var(--font-heading);font-size:20px;font-weight:600">No materials uploaded</div>
+            <div style="font-size:13px;color:var(--color-neutral-700);max-width:420px">A profile needs at least one approved source. Return to intake and attach a ZIP of company materials.</div>
+            <button class="btn btn-secondary" onClick="{{ toIntake }}" style="margin-top:6px">Upload a ZIP</button>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--color-neutral-700);flex-wrap:wrap">
+        <span>Relevance is inferred from document type and content against the profile sections.</span>
+        <span>Restricted or MNPI files are excluded by default.</span>
+      </div>
+    </div>
+
+    <aside style="display:flex;flex-direction:column;gap:20px;position:sticky;top:84px">
+      <div class="card blueprint" style="padding:18px;gap:12px">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="display:flex;align-items:center"><div class="card-kicker" style="color:var(--color-accent-700);flex:1">Analysis brief</div><button class="btn btn-ghost" onClick="{{ toIntake }}" style="font-size:13px">Edit</button></div>
+        <div><div style="font-size:11px;color:var(--color-neutral-700)">Company</div><div style="font-family:var(--font-heading);font-size:22px;font-weight:600;line-height:1.15">{{ company }}</div></div>
+        <div><div style="font-size:11px;color:var(--color-neutral-700)">Context</div><div style="font-size:13px;line-height:1.5;text-wrap:pretty">{{ contextShown }}</div></div>
+        <div><div style="font-size:11px;color:var(--color-neutral-700)">Archive</div><div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ zipName }}</div></div>
+      </div>
+
+      <div class="card blueprint" style="padding:18px;gap:14px">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="card-kicker" style="color:var(--color-accent-700)">Approval</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--color-divider);border:1px solid var(--color-divider)">
+          <div style="background:var(--color-bg);padding:10px"><div style="font-family:var(--font-heading);font-size:28px;font-weight:600;line-height:1">{{ sum.included }}</div><div style="font-size:11px;color:var(--color-neutral-700)">sources to approve</div></div>
+          <div style="background:var(--color-bg);padding:10px"><div style="font-family:var(--font-heading);font-size:28px;font-weight:600;line-height:1">{{ sum.size }}</div><div style="font-size:11px;color:var(--color-neutral-700)">to be analysed</div></div>
+        </div>
+        <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;cursor:pointer">
+          <input type="checkbox" checked="{{ confirmed }}" onChange="{{ toggleConfirm }}" disabled="{{ noIncluded }}" style="margin-top:2px;flex:none">
+          <span>I approve these {{ sum.included }} sources for use in this analysis and confirm they are cleared for this deal team.</span>
+        </label>
+        <details style="border-top:1px solid var(--color-divider);padding-top:10px">
+          <summary style="cursor:pointer;font-size:12px;color:var(--color-neutral-700);user-select:none">Agent settings</summary>
+          <div style="display:flex;flex-direction:column;gap:14px;padding-top:12px">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.45">
+              <span style="font-weight:600">Report agent</span>
+              <select value="{{ reportAgentModel }}" onChange="{{ setReportAgentModel }}" style="width:100%;min-height:38px;border:1px solid var(--color-neutral-500);background:var(--color-bg);color:var(--color-text);padding:8px 10px;font:inherit">
+                <option value="sonnet">Sonnet — faster</option>
+                <option value="opus">Opus — deeper analysis</option>
+              </select>
+              <span style="font-size:12px;color:var(--color-neutral-700)">Controls report planning and drafting. Final report review stays on Sonnet.</span>
+            </label>
+            <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;cursor:pointer">
+              <input type="checkbox" checked="{{ fastReview }}" onChange="{{ toggleFastReview }}" style="margin-top:2px;flex:none">
+              <span><strong style="font-weight:600">Use Haiku for finding review</strong><br><span style="color:var(--color-neutral-700)">Faster finding-level review. Grounding checks and final report review are unchanged.</span></span>
+            </label>
+          </div>
+        </details>
+        <button class="btn btn-primary blueprint" onClick="{{ startGen }}" disabled="{{ cantGen }}" style="min-height:40px;font-size:15px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          {{ genLabel }}
+        </button>
+        <div style="font-size:12px;color:var(--color-neutral-700);margin-top:-6px">{{ genHint }}</div>
+      </div>
+      <button class="btn btn-ghost" onClick="{{ toIntake }}" style="align-self:flex-start;color:var(--color-text)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>Back to intake</button>
+    </aside>
+  </div>
+</div>
+</sc-if>
+
+<!-- GENERATING -->
+<sc-if value="{{ isGen }}">
+<div style="max-width:780px;margin:0 auto;animation:fadeup .3s ease both">
+  <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:8px">Step 03 — Generating</div>
+  <h1 style="font-size:40px;margin:0 0 6px">{{ genTitle }}</h1>
+  <p style="color:var(--color-neutral-700);margin:0 0 24px">{{ genSub }}</p>
+
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+    <div style="flex:1;height:3px;background:var(--color-neutral-300)"><div style="{{ genBar }}"></div></div>
+    <div style="font-family:var(--font-heading);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;width:48px;text-align:right">{{ genPct }}</div>
+  </div>
+
+  <div class="blueprint">
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <sc-for list="{{ stages }}" as="st" hint-placeholder-count="6">
+      <div style="{{ st.rowStyle }}">
+        <div style="width:22px;display:grid;place-items:center">
+          <sc-if value="{{ st.isDone }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-accent-700)"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+          <sc-if value="{{ st.isActive }}">{{ spinner }}</sc-if>
+          <sc-if value="{{ st.isPending }}"><span style="width:9px;height:9px;border:1px solid var(--color-neutral-400)"></span></sc-if>
+          <sc-if value="{{ st.isWarn }}"><span style="width:14px;height:14px;display:grid;place-items:center;border:1px solid oklch(0.65 0.12 65);color:oklch(0.42 0.11 55);font-size:10px">!</span></sc-if>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:500">{{ st.label }}</div>
+          <div style="font-size:12px;color:var(--color-neutral-700)">{{ st.detail }}</div>
+        </div>
+        <div style="font-size:12px;color:var(--color-neutral-700);font-variant-numeric:tabular-nums">{{ st.time }}</div>
+      </div>
+      <sc-if value="{{ st.hasLiveDetails }}">
+        <div style="padding:0 18px 10px 54px;background:color-mix(in srgb, var(--color-accent) 3%, transparent)">
+          <sc-for list="{{ st.liveDetails }}" as="dt">
+            <div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:8px;align-items:start;padding:5px 0;font-size:12px;color:var(--color-neutral-700)">
+              <span style="margin-top:5px;width:4px;height:4px;background:var(--color-neutral-500);border-radius:50%"></span>
+              <div><span style="color:var(--color-text)">{{ dt.label }}</span><sc-if value="{{ dt.hasDetail }}"><span> · {{ dt.detail }}</span></sc-if></div>
+              <span style="font-variant-numeric:tabular-nums">{{ dt.time }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ st.hasCollapsedDetails }}">
+        <details style="margin:-1px 18px 8px 54px;font-size:12px;color:var(--color-neutral-700)">
+          <summary style="cursor:pointer;padding:5px 0">{{ st.detailCount }} underlying activities</summary>
+          <div style="padding:2px 0 6px 12px;border-left:1px solid var(--color-divider)">
+            <sc-for list="{{ st.collapsedDetails }}" as="dt">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:4px 0 4px 10px">
+                <div><span style="color:var(--color-text)">{{ dt.label }}</span><sc-if value="{{ dt.hasDetail }}"><span> · {{ dt.detail }}</span></sc-if></div>
+                <span style="font-variant-numeric:tabular-nums">{{ dt.time }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </details>
+      </sc-if>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ hasNotes }}">
+    <div style="margin-top:24px">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700);margin-bottom:8px">Notices · {{ notesCount }}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ notes }}" as="nt">
+          <div style="{{ nt.style }}">
+            <span style="{{ nt.tagStyle }}">{{ nt.kind }}</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:500">{{ nt.title }}</div><div style="font-size:13px;color:var(--color-neutral-800)">{{ nt.text }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-top:28px">
+    <sc-if value="{{ genDone }}">
+      <button class="btn btn-primary blueprint" onClick="{{ openReport }}" style="min-height:40px;padding:0 20px;font-size:15px;animation:fadeup .3s ease both">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        Open one-pager
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+      </button>
+    </sc-if>
+    <sc-if value="{{ genRunning }}">
+      <button class="btn btn-secondary" onClick="{{ cancelGen }}">{{ generationExitLabel }}</button>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- REPORT -->
+<sc-if value="{{ isReport }}">
+<div style="max-width:1120px;margin:0 auto;animation:fadeup .35s ease both">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">One-pager · v{{ reportV }}</div>
+    <span class="tag tag-neutral">Draft · for internal review</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-secondary" onClick="{{ revise }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Revise sources &amp; regenerate</button>
+    </div>
+  </div>
+
+  <sc-if value="{{ regenNote.show }}">
+    <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;margin-bottom:16px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);font-size:13px;color:var(--color-accent-900)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+      <span><strong style="font-weight:500">Regenerated as v{{ reportV }}.</strong> {{ regenNote.text }}</span>
+    </div>
+  </sc-if>
+
+  <article class="blueprint" style="padding:30px 32px 22px">
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;padding-bottom:22px;border-bottom:1px solid var(--color-divider)">
+      <div>
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700);margin-bottom:6px">Company profile · Strictly confidential</div>
+        <h1 style="font-size:46px;margin:0 0 6px;letter-spacing:-0.02em">{{ company }}</h1>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,auto);gap:0;border:1px solid var(--color-divider);align-self:start">
+        <div style="padding:10px 16px;border-right:1px solid var(--color-divider)"><div style="font-size:11px;color:var(--color-neutral-700)">Generated</div><div style="font-size:13px;font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums">{{ reportAt }}</div></div>
+        <button onClick="{{ openSources }}" style="all:unset;cursor:pointer;padding:10px 16px" style-hover="background:color-mix(in srgb, var(--color-accent) 8%, transparent)"><div style="font-size:11px;color:var(--color-neutral-700)">Approved sources</div><div style="font-size:13px;font-weight:500;color:var(--color-accent-700);text-decoration:underline;text-underline-offset:3px">{{ approvedCount }} files</div></button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--color-divider);font-size:12px">
+      <span style="letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);flex:none">Brief</span>
+      <span style="color:var(--color-neutral-800)">{{ contextShown }}</span>
+      <span style="margin-left:auto;display:flex;gap:10px;flex:none;color:var(--color-neutral-700)"><span>■ Reported</span><span>= Calculated</span><span>≈ Estimated</span><span>∅ Not available</span></span>
+    </div>
+
+    <sc-if value="{{ hasBottomLine }}">
+      <section style="padding:18px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700);margin-bottom:6px">Bottom line</div>
+        <p style="font-size:16px;line-height:1.5;margin:0 0 8px;max-width:900px;text-wrap:pretty">{{ bottomLine.summary }}</p>
+        <p style="font-size:14px;line-height:1.5;margin:0;max-width:900px"><strong style="font-weight:600">Recommendation.</strong> {{ bottomLine.recommendation }}</p>
+        <div style="font-size:11px;color:var(--color-neutral-700);margin-top:8px">Based on: {{ bottomLine.basis }}</div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasIssues }}">
+      <section style="padding:14px 0;border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700)">Open points</div>
+        <sc-for list="{{ reportIssues }}" as="ri">
+          <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;line-height:1.45"><span style="{{ ri.style }}">{{ ri.label }}</span><span>{{ ri.message }} <span style="color:var(--color-neutral-700)">{{ ri.action }}</span></span></div>
+        </sc-for>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasQuestions }}">
+      <section style="padding:12px 0;border-bottom:1px solid var(--color-divider);display:flex;flex-wrap:wrap;gap:4px 18px;font-size:12px;color:var(--color-neutral-800)">
+        <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700)">Questions answered</span>
+        <sc-for list="{{ briefQuestions }}" as="bq"><span>{{ bq.mark }} {{ bq.text }}</span></sc-for>
+      </section>
+    </sc-if>
+
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ reportSections }}" as="rs">
+        <section style="padding:22px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="margin-bottom:10px"><h2 style="font-size:22px;margin:0 0 4px">{{ rs.title }}</h2><sc-if value="{{ rs.hasSummary }}"><div style="font-size:13px;line-height:1.5;color:var(--color-neutral-700);max-width:820px">{{ rs.summary }}</div></sc-if></div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ rs.findings }}" as="f">
+              <button onClick="{{ f.open }}" style="all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:block;padding:13px 12px;margin:0 -12px;border-top:1px solid color-mix(in srgb, var(--color-text) 7%, transparent)" style-hover="background:color-mix(in srgb, var(--color-accent) 6%, transparent)">
+                <sc-if value="{{ f.sel }}"><span style="position:absolute;inset:0;border:2px solid var(--color-accent);pointer-events:none"></span></sc-if>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font-size:13px;font-weight:500">{{ f.title }}</span><span style="{{ f.chip.style }}">{{ f.chip.label }}</span><span style="margin-left:auto;font-size:11px;color:var(--color-accent-700)">{{ f.refs }}</span></div>
+                <sc-if value="{{ f.isNarrative }}"><div style="font-size:14px;line-height:1.55;max-width:900px;text-wrap:pretty">{{ f.preview }}</div></sc-if>
+                <sc-if value="{{ f.isMetric }}"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-family:var(--font-heading);font-size:28px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums">{{ f.value }}</span><span style="font-size:12px;color:var(--color-neutral-700)">{{ f.sub }}</span></div></sc-if>
+                <div style="display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--color-neutral-700)"><span style="display:flex;gap:2px"><sc-for list="{{ f.meter }}" as="s"><span style="{{ s }}"></span></sc-for></span><span>{{ f.confLabel }}</span><sc-if value="{{ f.hasConflicts }}"><span style="{{ f.conflictStyle }}">Conflict</span></sc-if></div>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+      </sc-for>
+    </div>
+
+    <div style="margin-top:18px;padding-top:12px;border-top:1px solid var(--color-divider);display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11px;color:var(--color-neutral-700)">
+      <sc-for list="{{ sourceKey }}" as="sk"><span>[{{ sk.num }}] {{ sk.n }}</span></sc-for>
+    </div>
+  </article>
+  <div style="font-size:12px;color:var(--color-neutral-700);margin-top:10px">Select any figure or section to see its evidence, methodology and assumptions.</div>
+</div>
+</sc-if>
+</main>
+
+<!-- DELETE CONFIRMATION -->
+<sc-if value="{{ del.show }}">
+  <div onClick="{{ del.cancel }}" style="position:fixed;inset:0;z-index:55;display:grid;place-items:center;background:color-mix(in srgb, var(--color-neutral-900) 24%, transparent)">
+    <div role="alertdialog" aria-modal="true" aria-labelledby="deltitle" onClick="{{ del.stop }}" style="max-width:440px;width:calc(100% - 48px);background:var(--color-bg);border:1px solid var(--color-divider);box-shadow:var(--shadow-lg);position:relative;z-index:1">
+      <div id="deltitle" style="padding:20px 22px 10px;font-family:var(--font-heading);font-size:22px;font-weight:600">Delete {{ del.company }}?</div>
+      <div style="padding:0 22px 18px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.5"><div>{{ del.body }}</div><div style="font-size:12px;color:var(--color-neutral-700)">The local data is retained in recoverable storage. You can undo for a few seconds after deleting.</div><sc-if value="{{ del.hasError }}"><div style="color:oklch(0.42 0.14 28);font-size:13px">{{ del.error }}</div></sc-if></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--color-divider)"><button class="btn btn-ghost" onClick="{{ del.cancel }}" disabled="{{ del.busy }}">Cancel</button><button class="btn" onClick="{{ del.confirm }}" disabled="{{ del.disabled }}" style="background:oklch(0.48 0.15 28);border-color:oklch(0.48 0.15 28);color:var(--color-bg)">{{ del.label }}</button></div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ del.toast }}"><div role="status" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:14px;padding:10px 12px 10px 16px;background:var(--color-neutral-900);color:var(--color-bg);font-size:13px;box-shadow:var(--shadow-md);animation:fadeup .25s ease both"><span>{{ del.toastText }}</span><button class="btn btn-ghost" onClick="{{ del.undo }}" disabled="{{ del.undoBusy }}" style="color:var(--color-bg);font-family:var(--font-body);font-size:13px;text-decoration:underline;text-underline-offset:3px">{{ del.undoLabel }}</button></div></sc-if>
+
+<!-- DRAWER -->
+<div onClick="{{ closeDrawer }}" style="{{ backdropStyle }}"></div>
+<aside aria-label="Evidence and methodology" style="{{ drawerStyle }}">
+  <div style="position:sticky;top:0;z-index:2;background:var(--color-bg);display:flex;align-items:center;gap:10px;padding:14px 22px;border-bottom:1px solid var(--color-divider)">
+    <div style="flex:1;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">{{ d.kicker }}</div>
+    <button class="btn btn-icon" onClick="{{ closeDrawer }}" aria-label="Close panel" style="width:32px;height:32px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+  </div>
+
+  <sc-if value="{{ d.isItem }}">
+    <div style="padding:20px 22px 40px;display:flex;flex-direction:column;gap:24px">
+      <div>
+        <div style="font-size:13px;color:var(--color-neutral-700);margin-bottom:2px">{{ d.title }}</div>
+        <sc-if value="{{ d.isNarrative }}"><p style="font-family:var(--font-body);font-size:15px;font-weight:400;line-height:1.6;margin:8px 0 0;text-wrap:pretty">{{ d.value }}</p></sc-if>
+        <sc-if value="{{ d.isMetric }}"><div style="font-family:var(--font-heading);font-size:40px;font-weight:600;line-height:1.05;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ d.value }}</div></sc-if>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:10px;font-size:12px">
+          <span style="{{ d.chip.style }}">{{ d.chip.label }}</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="display:flex;gap:2px"><sc-for list="{{ d.meter }}" as="s"><span style="{{ s }}"></span></sc-for></span>{{ d.confLabel }} confidence</span>
+          <span style="color:var(--color-neutral-700)">Freshness: {{ d.fresh }}</span>
+        </div>
+        <sc-if value="{{ d.showSummary }}"><p style="font-size:14px;margin:14px 0 0;line-height:1.55;text-wrap:pretty">{{ d.summary }}</p></sc-if>
+      </div>
+
+      <sc-if value="{{ d.hasCalc }}">
+        <section>
+          <h4 style="font-size:17px;margin:0 0 8px">Calculation</h4>
+          <div style="border:1px solid var(--color-divider);padding:14px 16px;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;gap:4px">
+            <sc-for list="{{ d.calc }}" as="ln"><div style="{{ ln.style }}">{{ ln.t }}</div></sc-for>
+          </div>
+          <div style="margin-top:10px;border:1px solid var(--color-divider)">
+            <sc-for list="{{ d.inputs }}" as="in">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:4px 12px;padding:9px 12px;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent)">
+                <div style="font-size:13px;font-weight:500">{{ in.label }}</div>
+                <div style="font-size:13px;font-weight:500;text-align:right;font-variant-numeric:tabular-nums">{{ in.value }}</div>
+                <div style="font-size:12px;color:var(--color-neutral-700);grid-column:1 / -1"><span style="{{ in.chip.style }}">{{ in.chip.label }}</span> <span style="margin-left:6px">{{ in.src }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ d.hasRubric }}">
+        <section>
+          <h4 style="font-size:17px;margin:0 0 8px">Scoring rubric</h4>
+          <div style="border:1px solid var(--color-divider)">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 40px 52px;gap:8px;padding:7px 12px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider)"><span>Signal</span><span style="text-align:right">Weight</span><span style="text-align:right">Score</span><span style="text-align:right">Weighted</span></div>
+            <sc-for list="{{ d.rubric }}" as="r">
+              <div style="padding:9px 12px;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent)">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 40px 52px;gap:8px;font-size:13px;font-variant-numeric:tabular-nums">
+                  <span style="font-weight:500">{{ r.sig }}</span><span style="text-align:right">{{ r.wl }}</span><span style="text-align:right">{{ r.s }}/5</span><span style="text-align:right">{{ r.ws }}</span>
+                </div>
+                <div style="font-size:12px;color:var(--color-neutral-800);margin-top:3px">{{ r.note }} <span style="color:var(--color-accent-700)">{{ r.ref }}</span></div>
+              </div>
+            </sc-for>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 52px;padding:10px 12px;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums"><span>Weighted score</span><span style="text-align:right">{{ d.score }}</span></div>
+          </div>
+        </section>
+      </sc-if>
+
+      <section>
+        <h4 style="font-size:17px;margin:0 0 8px">Supporting evidence</h4>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ d.evidence }}" as="ev">
+            <div style="border:1px solid var(--color-divider);padding:10px 12px">
+              <div style="display:flex;gap:8px;align-items:baseline;font-size:12px"><span style="color:var(--color-accent-700);font-weight:500">[{{ ev.num }}]</span><span style="font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ev.file }}</span></div>
+              <div style="font-size:12px;color:var(--color-neutral-700);margin:2px 0 6px">{{ ev.loc }}</div>
+              <div style="font-size:13px;line-height:1.5;padding-left:10px;border-left:2px solid var(--color-accent-300)">{{ ev.quote }}</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ d.noEvidence }}"><div style="font-size:13px;color:var(--color-neutral-700)">No approved source contains supporting evidence for this item.</div></sc-if>
+        </div>
+      </section>
+
+      <sc-if value="{{ d.hasConflicts }}">
+        <section>
+          <h4 style="font-size:17px;margin:0 0 8px">Conflicting evidence</h4>
+          <sc-for list="{{ d.conflicts }}" as="c">
+            <div style="border:1px solid oklch(0.82 0.07 75);background:oklch(0.975 0.02 85);padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;gap:8px;align-items:baseline;font-size:12px"><span style="font-weight:500;flex:1">{{ c.file }}</span><span style="font-family:var(--font-heading);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums">{{ c.value }}</span></div>
+              <div style="font-size:12px;color:var(--color-neutral-700)">{{ c.loc }}</div>
+              <div style="font-size:13px"><strong style="font-weight:500">Resolution: </strong>{{ c.note }}</div>
+            </div>
+          </sc-for>
+        </section>
+      </sc-if>
+
+      <section>
+        <h4 style="font-size:17px;margin:0 0 8px">Methodology</h4>
+        <p style="font-size:13.5px;margin:0;line-height:1.55">{{ d.method }}</p>
+      </section>
+
+      <section>
+        <h4 style="font-size:17px;margin:0 0 8px">Assumptions</h4>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:13.5px"><sc-for list="{{ d.assumptions }}" as="a"><div style="display:flex;gap:8px"><span style="color:var(--color-accent-700)">—</span><span>{{ a }}</span></div></sc-for></div>
+      </section>
+
+      <sc-if value="{{ d.hasMissing }}">
+        <section>
+          <h4 style="font-size:17px;margin:0 0 8px">Missing information</h4>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:13.5px"><sc-for list="{{ d.missing }}" as="a"><div style="display:flex;gap:8px"><span style="color:var(--color-neutral-600)">∅</span><span>{{ a }}</span></div></sc-for></div>
+        </section>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ d.isFile }}">
+    <div style="padding:20px 22px 40px;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div style="font-family:var(--font-heading);font-size:24px;font-weight:600;line-height:1.15;word-break:break-all">{{ d.f.n }}</div>
+        <div style="font-size:13px;color:var(--color-neutral-700);margin-top:4px">{{ d.f.k }} · {{ d.f.t }} · {{ d.f.size }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--color-divider);border:1px solid var(--color-divider)">
+        <div style="background:var(--color-bg);padding:10px 12px"><div style="font-size:11px;color:var(--color-neutral-700)">Document date</div><div style="font-size:13px;font-weight:500">{{ d.f.date }}</div></div>
+        <div style="background:var(--color-bg);padding:10px 12px"><div style="font-size:11px;color:var(--color-neutral-700)">Contents</div><div style="font-size:13px;font-weight:500">{{ d.f.meta }}</div></div>
+        <div style="background:var(--color-bg);padding:10px 12px"><div style="font-size:11px;color:var(--color-neutral-700)">Inferred relevance</div><div style="font-size:13px;font-weight:500">{{ d.f.relLabel }}</div></div>
+        <div style="background:var(--color-bg);padding:10px 12px"><div style="font-size:11px;color:var(--color-neutral-700)">Sensitivity</div><div style="font-size:13px;font-weight:500">{{ d.f.sens }}</div></div>
+      </div>
+      <sc-if value="{{ d.f.bad }}">
+        <div style="padding:12px 14px;border:1px solid oklch(0.8 0.07 28);background:oklch(0.97 0.012 28);font-size:13px"><div style="font-weight:500;color:oklch(0.4 0.13 28)">Unreadable</div>{{ d.f.sub }}. This file can’t be included. Re-export it as PDF or remove the password and upload a new ZIP.</div>
+      </sc-if>
+      <sc-if value="{{ d.f.readable }}">
+        <section><h4 style="font-size:17px;margin:0 0 6px">Why this relevance</h4><p style="font-size:13.5px;margin:0">{{ d.f.why }}</p></section>
+        <sc-if value="{{ d.f.flag }}"><section><h4 style="font-size:17px;margin:0 0 6px">Triage warning</h4><p style="font-size:13.5px;margin:0;color:oklch(0.42 0.09 65)">{{ d.f.flag }}</p></section></sc-if>
+        <section><h4 style="font-size:17px;margin:0 0 6px">Detected structure</h4><div style="display:flex;flex-direction:column;gap:4px;font-size:13.5px"><sc-for list="{{ d.f.secs }}" as="s"><div style="display:flex;gap:8px"><span style="color:var(--color-accent-700)">—</span><span>{{ s }}</span></div></sc-for></div></section>
+        <section><h4 style="font-size:17px;margin:0 0 6px">Extract preview</h4><div style="font-size:13px;line-height:1.5;padding:10px 12px;border:1px solid var(--color-divider);background:var(--color-surface)">{{ d.f.ex }}</div></section>
+        <sc-if value="{{ isReview }}">
+          <div style="display:flex;gap:10px;align-items:center;padding-top:6px">
+            <button class="btn btn-secondary" onClick="{{ d.f.toggle }}">{{ d.f.toggleLabel }}</button>
+            <span style="{{ d.f.statusStyle }}">{{ d.f.status }}</span>
+          </div>
+        </sc-if>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ d.isSources }}">
+    <div style="padding:20px 22px 40px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-family:var(--font-heading);font-size:24px;font-weight:600">{{ approvedCount }} approved sources</div>
+      <div style="font-size:13px;color:var(--color-neutral-700)">Approved {{ reportAt }} for profile v{{ reportV }}. No other material was read.</div>
+      <div style="border:1px solid var(--color-divider)">
+        <sc-for list="{{ sourceKey }}" as="sk">
+          <div style="display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent)">
+            <span style="color:var(--color-accent-700);font-weight:500;font-size:13px">[{{ sk.num }}]</span>
+            <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sk.n }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ sk.k }} · {{ sk.date }} · {{ sk.sens }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+      <button class="btn btn-secondary" onClick="{{ revise }}" style="align-self:flex-start">Revise sources &amp; regenerate</button>
+    </div>
+  </sc-if>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const ERR='oklch(0.45 0.14 28)';
+const mb=n=>n.toFixed(1)+' MB';
+const CHIP_BASE={display:'inline-flex',alignItems:'center',gap:5,fontSize:11,padding:'2px 7px',lineHeight:1.3,whiteSpace:'nowrap',fontWeight:500,fontFamily:'var(--font-body)'};
+const CH={
+ 'Reported':['■',{background:'var(--color-accent-100)',color:'var(--color-accent-800)',border:'1px solid var(--color-accent-300)'}],
+ 'Calculated':['=',{color:'var(--color-accent-800)',border:'1px solid var(--color-accent-600)'}],
+ 'Estimated':['≈',{color:'var(--color-accent-800)',border:'1px dashed var(--color-accent-600)'}],
+ 'AI assessment':['◇',{color:'var(--color-accent-800)',border:'1px solid var(--color-accent-400)'}],
+ 'Not available':['∅',{color:'var(--color-neutral-700)',background:'var(--color-neutral-200)',border:'1px solid var(--color-neutral-300)'}],
+ 'Failed':['!',{color:ERR,background:'oklch(0.97 0.012 28)',border:'1px solid oklch(0.8 0.07 28)'}],
+};
+const chip=s=>({label:CH[s][0]+' '+s,style:{...CHIP_BASE,...CH[s][1]}});
+const CONF=['None','Very low','Low','Medium','High','Very high'];
+const meter=(c,h=6)=>[1,2,3,4,5].map(i=>({width:8,height:h,background:i<=c?'var(--color-accent-700)':'var(--color-neutral-300)'}));
+const tagStyle=(bg,fg,bd)=>({...CHIP_BASE,background:bg,color:fg,border:'1px solid '+bd});
+const WARN=tagStyle('oklch(0.965 0.03 85)','oklch(0.42 0.09 65)','oklch(0.82 0.07 75)');
+const ERRT=tagStyle('oklch(0.97 0.012 28)',ERR,'oklch(0.8 0.07 28)');
+const INFO=tagStyle('var(--color-neutral-100)','var(--color-neutral-800)','var(--color-neutral-300)');
+const apiError=(payload,fallback)=>{
+ const detail=payload&&payload.detail;
+ if(typeof detail==='string')return detail;
+ if(Array.isArray(detail))return detail.map(issue=>{
+  const path=Array.isArray(issue.loc)?issue.loc.filter(part=>part!=='body').join('.') : '';
+  return `${path?path+': ':''}${issue.msg||'Invalid request'}`;
+ }).join(' · ')||fallback;
+ return fallback;
+};
+
+function buildApiItems(report,files){
+ const approved=files.filter(f=>report.approved_source_ids.includes(f.id));
+ const bySource=Object.fromEntries(files.map(f=>[f.id,f]));
+ const num={};approved.forEach((f,i)=>num[f.id]=i+1);
+ const statusName=s=>({reported:'Reported',calculated:'Calculated',estimated:'Estimated',assessed:'AI assessment',unavailable:'Not available'}[s]||'Not available');
+ const confidence=e=>e.level==='strong'?4:e.level==='moderate'?3:e.level==='limited'?2:0;
+ const location=l=>l.page?`Page ${l.page}`:l.sheet?`${l.sheet}${l.cell_range?' · '+l.cell_range:''}`:l.section||l.cell_range||'Source excerpt';
+ const display=f=>f.status==='unavailable'?'Not available':f.type==='number'?(f.display_value||String(f.value)):f.value;
+ const decorate=(f,section,fallbackTitle)=>{
+  if(!f) f={id:'missing-'+fallbackTitle.toLowerCase().replaceAll(' ','-'),label:fallbackTitle,status:'unavailable',type:'text',value:null,citations:[],assumptions:[],conflicts:[],methodology:null,evidence_strength:{level:'limited',directness:'inferred',source_count:0,has_conflicts:false,reasons:['The approved sources do not support this item.']}};
+  const refsIds=[...new Set(f.citations.map(c=>c.source_id))];
+  const evidenceView=f.citations.map(c=>({num:num[c.source_id],file:c.source_name||bySource[c.source_id]?.n||c.source_id,loc:location(c.location),quote:c.excerpt||'Evidence referenced without an excerpt.'}));
+  const citationById=Object.fromEntries(f.citations.map(c=>[c.id,c]));
+  const conflictsView=f.conflicts.map(c=>{const cite=citationById[c.citation_ids[0]];return {src:cite?.source_id,file:cite?.source_name||'Conflicting source',loc:cite?location(cite.location):'See citations',value:'Conflict',note:c.description};});
+  const calc=f.calculation?[{t:f.calculation.expression,b:1},...f.calculation.inputs.map(i=>({t:`${i.name}: ${i.value} ${i.unit}`})),{t:`= ${f.display_value||f.calculation.result}`,b:2}]:[];
+  const inputs=f.calculation?f.calculation.inputs.map(i=>({label:i.name,value:`${i.value} ${i.unit}`,st:'Reported',src:i.citation_ids.join(', ')})):[];
+  const fullValue=f.type==='categorical'&&f.rationale&&f.status!=='unavailable'?`${display(f)} — ${f.rationale}`:display(f);const compact=value=>{const text=String(value??'');if(text.length<=360)return text;const cut=text.slice(0,360);const sentence=Math.max(cut.lastIndexOf('. '),cut.lastIndexOf('; '));return (sentence>180?cut.slice(0,sentence+1):cut.trimEnd())+' …';};
+  const item={id:f.id,title:f.label||fallbackTitle,value:fullValue,preview:compact(fullValue),sub:f.period||'',status:statusName(f.status),conf:confidence(f.evidence_strength),fresh:f.evidence_strength.latest_source_date||'Not dated',summary:section?.summary||String(fullValue),findingType:f.type,isNarrative:(f.type==='text'||f.type==='categorical')&&f.status!=='unavailable',evidenceView,conflictsView,method:f.methodology||'Taken directly from the cited approved evidence.',assumptions:f.assumptions.map(a=>a.description),missing:f.status==='unavailable'?f.evidence_strength.reasons:[],refsIds,calc,inputs,points:[],rubric:[]};
+  item.chip=chip(item.status);item.meter=meter(item.conf);item.confLabel=CONF[item.conf];item.refs=refsIds.filter(id=>num[id]).map(id=>'['+num[id]+']').join('');item.evidence=evidenceView;item.conflicts=conflictsView;
+  return item;
+ };
+ const genericSections=[...report.sections].sort((a,b)=>a.order-b.order).map(section=>({id:section.id,title:section.title,summary:section.summary||'',findings:section.findings.map(f=>decorate(f,section,f.label))}));
+ const it={};genericSections.forEach(section=>section.findings.forEach(f=>{it[f.id]=f;}));
+ const findingLabel=Object.fromEntries(report.sections.flatMap(s=>s.findings.map(f=>[f.id,f.label])));
+ const answered=new Set(report.sections.flatMap(s=>s.findings.flatMap(f=>f.answers||[])));
+ const bottomLine=report.bottom_line?{summary:report.bottom_line.summary,recommendation:report.bottom_line.recommendation,basis:report.bottom_line.finding_ids.map(id=>findingLabel[id]||id).join(' · ')}:null;
+ const questions=(report.questions||[]).map(q=>({text:q.text,ok:answered.has(q.id),mark:answered.has(q.id)?'✓':'—'}));
+ const issues=(report.issues||[]).map(i=>({message:i.message,action:i.user_action||'',style:i.severity==='info'?INFO:WARN,label:i.severity==='error'?'Error':i.severity==='info'?'Note':'Check'}));
+ return {it,approved,num,sections:genericSections,bottomLine,questions,issues};
+}
+
+function curateRunEvents(events){
+ const indexed=events.map((event,index)=>({event,index}));const rows=[];
+ const completed=e=>['completed','warning','failed'].includes(e.status);
+ const compact=items=>{const pending=[];const settled=[];items.forEach(x=>{if(x.event.status==='running'){pending.push(x);return;}const match=pending.findIndex(p=>p.event.tool_name===x.event.tool_name);if(match>=0)pending.splice(match,1);settled.push(x);});return [...settled,...pending].sort((a,b)=>a.index-b.index).map(x=>x.event);};
+ const jobStart=indexed.find(x=>x.event.kind==='job'&&x.event.label==='Report agent started');
+ const jobDone=indexed.find(x=>x.event.kind==='job'&&(
+  x.event.label==='One-pager verified and saved'||x.event.label==='Report generation failed'
+ ));
+ const sourceLoaded=indexed.find(x=>x.event.label==='Approved sources loaded');
+ const sourceOps=indexed.filter(x=>['glob_files','grep_files','read_file'].includes(x.event.tool_name));
+ const outline=indexed.filter(x=>x.event.tool_name==='define_report_outline');
+ const calculations=indexed.filter(x=>x.event.kind==='calculation');
+ const findingCalls=indexed.filter(x=>x.event.tool_name==='create_finding');
+ const reviews=indexed.filter(x=>x.event.kind==='review');
+ const reportChecks=indexed.filter(x=>['inspect_report','finalize_report'].includes(x.event.tool_name));
+ const subagents=indexed.filter(x=>x.event.kind==='subagent');
+ const outlineDone=outline.some(x=>completed(x.event));const findingStarted=findingCalls.length>0||reviews.length>0;const finalizeDone=reportChecks.some(x=>x.event.tool_name==='finalize_report'&&completed(x.event));
+ if(jobStart)rows.push({...jobStart,event:{...jobStart.event,label:'Analysis started',detail:'Analysis is using only the sources you approved.'}});
+ if(sourceLoaded||sourceOps.length){const details=compact(sourceOps);const done=details.filter(completed).length;const settled=outlineDone||findingStarted||!!jobDone;const base=sourceLoaded||sourceOps[0];rows.push({index:base.index+.01,event:{...base.event,kind:'tool',status:settled?'completed':'running',label:settled?`Evidence reviewed · ${done} activit${done===1?'y':'ies'}`:`Reviewing evidence · ${done} completed`,detail:'The agent is locating and reading decision-useful evidence.'},details,detailsOpen:!settled});}
+ if(outline.length){const details=compact(outline);const base=outline[0];rows.push({index:base.index+.01,event:{...base.event,status:outlineDone?'completed':'running',label:outlineDone?'Report structure set':'Structuring the report',detail:'The analyst brief determines the sections and emphasis.'},details,detailsOpen:!outlineDone});}
+ const latestSubagent=new Map();subagents.forEach(x=>latestSubagent.set(x.event.agent_name||x.event.label,x));latestSubagent.forEach(x=>rows.push({...x,details:[],detailsOpen:false}));
+ if(calculations.length){const details=compact(calculations);const done=details.filter(completed).length;const settled=findingStarted||finalizeDone||!!jobDone;const base=calculations[0];rows.push({index:base.index+.01,event:{...base.event,status:settled?'completed':'running',label:settled?`Metrics calculated · ${done}`:`Calculating metrics · ${done} completed`,detail:'Derived values are being calculated from cited inputs in the sandbox.'},details,detailsOpen:!settled});}
+ if(findingCalls.length||reviews.length){const toolDetails=compact(findingCalls);const details=[...toolDetails,...reviews.map(x=>x.event)].sort((a,b)=>new Date(a.occurred_at)-new Date(b.occurred_at));const accepted=reviews.filter(x=>x.event.status==='completed').length;const revisions=reviews.filter(x=>x.event.status==='warning').length;const settled=finalizeDone||!!jobDone;const base=(findingCalls[0]||reviews[0]);rows.push({index:base.index+.01,event:{...base.event,status:settled?'completed':'running',label:`Validating findings · ${accepted} accepted${revisions?` · ${revisions} refined`:''}`,detail:'Every proposed finding is checked against its cited evidence.'},details,detailsOpen:!settled});}
+ if(reportChecks.length){const details=compact(reportChecks);const base=reportChecks[0];rows.push({index:base.index+.01,event:{...base.event,status:finalizeDone?'completed':'running',label:finalizeDone?'Final checks passed':'Checking report completeness',detail:'Coverage, citations, and required sections are being checked.'},details,detailsOpen:!finalizeDone});}
+ if(jobDone)rows.push({...jobDone,event:{...jobDone.event,label:jobDone.event.status==='completed'?'One-pager ready':'Generation failed',detail:jobDone.event.status==='completed'?'The completed one-pager and its supporting evidence are ready.':jobDone.event.detail}});
+ return rows.sort((a,b)=>a.index-b.index);
+}
+
+class Component extends DCLogic {
+ state={step:'home',company:'',context:'',upload:null,intakeId:null,jobId:null,files:[],confirmed:false,fastReview:false,reportAgentModel:'sonnet',approvalBusy:false,approvalError:null,gen:null,report:null,revising:false,drawer:null,drag:false,visited:{intake:true},profiles:[],filter:'all',q:'',confirmDel:null,deleteBusy:false,deleteError:null,undo:null,undoBusy:false};
+ fileRef=React.createRef();
+ componentDidMount(){
+  const params=new URLSearchParams(window.location.search);const previewIntake=params.get('intake');const previewReport=params.get('report');const previewJob=params.get('job');
+  const profileMatch=window.location.pathname.match(/^\/report\/([A-Za-z0-9]+)\/?$/);
+  if(profileMatch){this.loadProfileRoute(profileMatch[1]);return;}
+  if(previewIntake&&previewJob){
+   this.loadPersisted({intake_id:previewIntake,active_job_id:previewJob,job_status:'running'});return;
+  }
+  if(previewIntake&&previewReport){
+   this.loadPersisted({intake_id:previewIntake,latest_report_id:previewReport});return;
+  }
+  this.loadProfiles();
+ }
+ loadProfileRoute=async(profileId)=>{
+  try{const response=await fetch(`/api/profiles/${encodeURIComponent(profileId)}`);const profile=await response.json();if(!response.ok)throw new Error(apiError(profile,'Saved profile not found.'));this.loadPersisted(profile);}
+  catch(error){history.replaceState(null,'','/?home=1');this.setState({step:'home',approvalError:error.message||'Saved profile not found.'},this.loadProfiles);}
+ };
+ loadProfiles=async()=>{
+  try{const response=await fetch('/api/profiles');const profiles=await response.json();if(!response.ok)throw new Error('Profiles could not be loaded.');this.setState({profiles});}
+  catch(error){this.setState({approvalError:error.message||'Profiles could not be loaded.'});}
+ };
+ confirmDelete=async()=>{
+  const profile=this.state.confirmDel;if(!profile||this.state.deleteBusy)return;
+  this.setState({deleteBusy:true,deleteError:null});
+  try{const response=await fetch(`/api/profiles/${encodeURIComponent(profile.intake_id)}`,{method:'DELETE'});const result=await response.json();if(!response.ok)throw new Error(apiError(result,'Profile could not be deleted.'));clearTimeout(this.toastT);this.toastT=setTimeout(()=>this.setState({undo:null,undoBusy:false}),6000);this.setState(s=>({profiles:s.profiles.filter(p=>p.intake_id!==profile.intake_id),confirmDel:null,deleteBusy:false,undo:{intakeId:profile.intake_id,company:profile.company_name,token:result.undo_token},undoBusy:false}));}
+  catch(error){this.setState({deleteBusy:false,deleteError:error.message||'Profile could not be deleted.'});}
+ };
+ undoDelete=async()=>{
+  const undo=this.state.undo;if(!undo||this.state.undoBusy)return;clearTimeout(this.toastT);this.setState({undoBusy:true});
+  try{const response=await fetch(`/api/profiles/${encodeURIComponent(undo.intakeId)}/restore`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({undo_token:undo.token})});const result=await response.json();if(!response.ok)throw new Error(apiError(result,'Profile could not be restored.'));this.setState({undo:null,undoBusy:false},this.loadProfiles);}
+  catch(error){this.setState({undoBusy:false,undo:{...undo,error:error.message||'Profile could not be restored.'}});}
+ };
+ loadPersisted=async(profile)=>{
+  try{
+   const intakeResponse=await fetch(`/api/intakes/${encodeURIComponent(profile.intake_id)}`);const intake=await intakeResponse.json();if(!intakeResponse.ok)throw new Error('Saved intake not found.');
+   let report=null;if(profile.latest_report_id){const reportResponse=await fetch(`/api/intakes/${encodeURIComponent(profile.intake_id)}/reports/${encodeURIComponent(profile.latest_report_id)}`);report=await reportResponse.json();if(!reportResponse.ok)throw new Error('Saved report not found.');}
+   const files=intake.sources.map(s=>this.sourceFromApi(s));const savedReport=report?{v:1,snap:report.approved_source_ids,prevSnap:null,at:new Date(report.generated_at).toLocaleString(),api:report}:null;const base={company:intake.company_name,context:intake.user_context||'',upload:{name:intake.archive_name,size:intake.archive_size_bytes/1048576,status:'done',progress:100},intakeId:intake.id,files,confirmed:false,fastReview:!!intake.use_fast_finding_review,reportAgentModel:intake.report_agent_model||'sonnet',approvalError:null,drawer:null,visited:{intake:true,review:true,report:!!report}};
+   const profileUrl=`/report/${encodeURIComponent(intake.id)}`;
+   if(profile.active_job_id){const snap=intake.approved_source_ids;history.replaceState(null,'',profileUrl);this.setState({...base,step:'generating',confirmed:true,jobId:profile.active_job_id,gen:{i:0,snap,done:false,events:[]},report:savedReport},()=>this.pollReportJob(intake.id,profile.active_job_id,snap));}
+   else if(report){history.replaceState(null,'',profileUrl);this.setState({...base,step:'report',confirmed:true,jobId:null,report:savedReport});}
+   else{history.replaceState(null,'',profileUrl);this.setState({...base,step:'review',jobId:null,report:null,approvalError:profile.job_status==='failed'?'The previous report generation failed. You can try again.':null});}window.scrollTo(0,0);
+  }catch(error){this.setState({approvalError:error.message||'Saved profile could not be loaded.'});}
+ };
+ newProfile=()=>{clearTimeout(this.jobPollT);history.replaceState(null,'','/');this.setState({step:'intake',company:'',context:'',upload:null,intakeId:null,jobId:null,files:[],confirmed:false,fastReview:false,reportAgentModel:'sonnet',approvalError:null,gen:null,report:null,revising:false,drawer:null,visited:{intake:true}});window.scrollTo(0,0);};
+ demoPrefill=()=>this.setState({
+  company:'Acme Technologies',
+  context:'Prepare a concise one-page investment committee brief covering the business and revenue model, ARR quality, leverage and debt capacity, valuation, and whether the product is genuinely AI-native. Highlight material risks, conflicting evidence, and missing information.'
+ });
+ goHome=()=>{clearTimeout(this.jobPollT);history.replaceState(null,'','/?home=1');this.setState({step:'home',drawer:null},this.loadProfiles);window.scrollTo(0,0);};
+ componentWillUnmount(){clearTimeout(this.jobPollT);clearTimeout(this.toastT);}
+ sourceFromApi(source){
+  const rel={low:1,medium:2,high:3}[source.relevance]||1;
+  const d=source.document_date?new Date(source.document_date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):null;
+  const cd=source.content_date?new Date(source.content_date+'T00:00:00Z').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}):null;
+  const flagText=(source.flags||[]).map(fl=>(fl.kind==='superseded'?'Superseded':'Different company')+': '+fl.note).join(' · ');
+  return {id:source.id,n:source.name,t:source.file_type,k:source.relative_path,s:source.size_bytes/1048576,d:cd||d,rel,sens:source.sensitivity,inc:source.included,flag:flagText||null,
+   meta:source.relative_path,secs:[source.relative_path],ex:'Content is available to the analysis agent only after approval.',why:source.relevance_reason,
+   bad:source.readable?null:(source.exclusion_reason||'Unreadable file')};
+ }
+ async uploadZip(file){
+  const size=file.size/1048576;
+  if(!/\.zip$/i.test(file.name)) return this.setState({upload:{name:file.name,size,status:'error',errTitle:'Unsupported file type',errMsg:'Only .zip archives are accepted. Compress the materials into a single ZIP and try again.'},intakeId:null,files:[]});
+  if(size>100) return this.setState({upload:{name:file.name,size,status:'error',errTitle:'File exceeds the 100 MB limit',errMsg:`This archive is ${size.toFixed(1)} MB. Remove large media or duplicate files, or split the data room and upload the core materials first.`},intakeId:null,files:[]});
+  this.setState({upload:{name:file.name,size,status:'uploading',progress:30},intakeId:null,files:[],confirmed:false,approvalError:null});
+  const form=new FormData();form.append('company_name',this.state.company);form.append('user_context',this.state.context);form.append('archive',file);
+  try{
+   this.setState({upload:{name:file.name,size,status:'extracting',progress:75}});
+   const response=await fetch('/api/intakes',{method:'POST',body:form});
+   const body=await response.json();
+   if(!response.ok) throw new Error(apiError(body,'The archive could not be processed.'));
+   this.setState({upload:{name:file.name,size,status:'done',progress:100},intakeId:body.id,files:body.sources.map(s=>this.sourceFromApi(s)),confirmed:false});
+  }catch(error){
+   this.setState({upload:{name:file.name,size,status:'error',errTitle:'Archive processing failed',errMsg:error.message||'The archive could not be processed.'},intakeId:null,files:[],confirmed:false});
+  }
+ }
+ clearUpload=()=>this.setState({upload:null,intakeId:null,files:[],confirmed:false,approvalError:null});
+ inc(){return this.state.files.filter(f=>!f.bad&&f.inc);}
+ setFiles(fn){this.setState(s=>({files:s.files.map(fn),confirmed:false,approvalError:null}));}
+ pollReportJob=async(intakeId,jobId,snap)=>{
+  clearTimeout(this.jobPollT);
+  try{
+   const response=await fetch(`/api/intakes/${encodeURIComponent(intakeId)}/report-jobs/${encodeURIComponent(jobId)}`);const job=await response.json();
+   if(!response.ok)throw new Error(apiError(job,'Report job status could not be loaded.'));
+   if(job.status==='queued'||job.status==='running'){
+    this.setState({jobId,gen:{i:0,snap,done:false,events:job.events||[]}});
+    this.jobPollT=setTimeout(()=>this.pollReportJob(intakeId,jobId,snap),2000);return;
+   }
+   if(job.status==='failed')throw new Error(job.error||'The report agent could not complete the one-pager.');
+   if(job.status!=='completed'||!job.report_id)throw new Error('The report job returned an invalid result.');
+   const reportResponse=await fetch(`/api/intakes/${encodeURIComponent(intakeId)}/reports/${encodeURIComponent(job.report_id)}`);const report=await reportResponse.json();
+   if(!reportResponse.ok)throw new Error(apiError(report,'The completed one-pager could not be loaded.'));
+   const prev=this.state.report;this.setState({step:'generating',jobId,gen:{i:0,snap,done:true,events:job.events||[]},report:{v:prev?prev.v+1:1,snap,prevSnap:prev?prev.snap:null,at:new Date(report.generated_at).toLocaleString(),api:report},revising:false,drawer:null,visited:{intake:true,review:true,report:true}},this.loadProfiles);
+   window.scrollTo(0,0);
+  }catch(error){this.setState({step:'review',jobId:null,gen:null,approvalError:error.message||'The one-pager could not be generated.'},this.loadProfiles);}
+ };
+ beginGeneration=async()=>{
+  const snap=this.inc().map(f=>f.id);
+  clearTimeout(this.jobPollT);
+  this.setState({step:'generating',jobId:null,gen:{i:0,snap,done:false,events:[]},drawer:null});window.scrollTo(0,0);
+  try{
+   const response=await fetch(`/api/intakes/${this.state.intakeId}/report-jobs`,{method:'POST'});const job=await response.json();
+   if(!response.ok) throw new Error(apiError(job,'The one-pager job could not be started.'));
+   history.replaceState(null,'',`/report/${encodeURIComponent(this.state.intakeId)}`);this.setState({jobId:job.id},()=>this.pollReportJob(this.state.intakeId,job.id,snap));
+  }catch(error){this.setState({step:'review',jobId:null,gen:null,approvalError:error.message||'The one-pager job could not be started.'});}
+ };
+ startGen=async()=>{
+  const sourceIds=this.inc().map(f=>f.id);
+  this.setState({approvalBusy:true,approvalError:null});
+  try{
+   const response=await fetch(`/api/intakes/${this.state.intakeId}/approve`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_ids:sourceIds,use_fast_finding_review:this.state.fastReview,report_agent_model:this.state.reportAgentModel})});
+   const body=await response.json();
+   if(!response.ok) throw new Error(apiError(body,'The source set could not be approved.'));
+   this.setState({approvalBusy:false},()=>this.beginGeneration());
+  }catch(error){this.setState({approvalBusy:false,approvalError:error.message||'The source set could not be approved.'});}
+ };
+ go(step){
+  if(step==='review'&&this.state.step==='report') return this.setState({step:'review',revising:true,drawer:null,confirmed:false});
+  this.setState({step,drawer:null});window.scrollTo(0,0);
+ }
+ renderVals(){
+  const S=this.state;const st=S.step;
+  const files=S.files;const readable=files.filter(f=>!f.bad);const included=readable.filter(f=>f.inc);const bad=files.filter(f=>f.bad);
+  const incSize=included.reduce((a,f)=>a+f.s,0);
+  const up=S.upload;
+  const upV={none:!up,busy:!!up&&(up.status==='uploading'||up.status==='extracting'),done:!!up&&up.status==='done',error:!!up&&up.status==='error',
+   name:up?up.name:'',sizeLabel:up?mb(up.size):'',pct:up?Math.round(up.progress||0)+'%':'',errTitle:up&&up.errTitle,errMsg:up&&up.errMsg,
+   label:!up?'':up.status==='uploading'?`Uploading · ${mb(up.size*(up.progress/100))} of ${mb(up.size)}`:up.status==='extracting'?'Unpacking archive and running AI source triage…':`${mb(up.size)} · ${files.length} files found · uploaded`,
+   barStyle:{height:'100%',width:(up?up.progress:0)+'%',background:'var(--color-accent-700)',transition:'width .12s linear'}};
+  const cantContinue=!S.company.trim()||!S.intakeId||!up||up.status!=='done';
+  const continueHint=!S.company.trim()?'Enter a company name to continue.':up&&upV.busy?'Waiting for upload and source triage to finish…':up&&upV.error?'Remove or replace the rejected file to continue.':!up?'Attach a ZIP to continue.':'Ready for source review.';
+  // steps
+  const vis=S.visited;const curIdx=st==='intake'?0:st==='review'?1:2;
+  const steps=[['01','Intake','intake'],['02','Source review','review'],['03','One-pager','report']].map(([n,label,key],i)=>{
+   const reachable=key==='intake'?st!=='generating':key==='review'?(vis.review&&st!=='generating'):!!S.report&&st!=='generating';
+   const cur=i===curIdx;const done=i<curIdx;
+   return {n,label,notLast:i<2,current:cur?'step':undefined,locked:!reachable||cur,go:()=>this.go(key),
+    style:{all:'unset',display:'flex',alignItems:'center',gap:8,padding:'6px 10px',whiteSpace:'nowrap',cursor:reachable&&!cur?'pointer':'default',fontSize:13,fontWeight:cur?500:400,color:cur?'var(--color-text)':reachable?'var(--color-neutral-800)':'var(--color-neutral-500)',borderBottom:cur?'2px solid var(--color-accent)':'2px solid transparent'},
+    numStyle:{fontFamily:'var(--font-heading)',fontWeight:600,fontSize:12,width:22,height:22,display:'grid',placeItems:'center',border:'1px solid '+(cur?'var(--color-accent)':done?'var(--color-accent-700)':'var(--color-divider)'),background:cur?'var(--color-accent)':done?'var(--color-accent-100)':'transparent',color:cur?'var(--color-bg)':done?'var(--color-accent-800)':'inherit'}};
+  });
+  // rows
+  const relLabel=r=>['—','Low','Medium','High'][r];
+  const sensStyle=s=>!s?{fontSize:12,color:'var(--color-neutral-600)'}:/Restricted/.test(s)?WARN:/Strictly/.test(s)?tagStyle('var(--color-accent-100)','var(--color-accent-900)','var(--color-accent-400)'):s==='Public'?{...CHIP_BASE,color:'var(--color-neutral-700)',border:'1px solid var(--color-neutral-300)'}:tagStyle('var(--color-neutral-100)','var(--color-neutral-800)','var(--color-neutral-300)');
+  const statusOf=f=>f.bad?['Unreadable',ERRT]:f.inc?['Included',tagStyle('var(--color-accent-700)','var(--color-bg)','var(--color-accent-700)')]:['Excluded',{...CHIP_BASE,color:'var(--color-neutral-700)',border:'1px dashed var(--color-neutral-500)'}];
+  const toggle=id=>()=>this.setFiles(x=>x.id===id&&!x.bad?{...x,inc:!x.inc}:x);
+  const rows=files.map(f=>{const [status,statusStyle]=statusOf(f);return {...f,size:mb(f.s),date:f.d||'Not dated',
+   dateStyle:{fontSize:12.5,fontVariantNumeric:'tabular-nums',color:f.d?'var(--color-text)':'var(--color-neutral-600)'},
+   sub:f.bad||(f.flag?'⚠ '+f.flag:f.k),subStyle:{fontSize:12,color:f.bad?ERR:f.flag?'oklch(0.42 0.09 65)':'var(--color-neutral-700)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'},
+   relLabel:relLabel(f.rel),relPips:[1,2,3].map(i=>({width:6,height:10,background:i<=f.rel?'var(--color-accent-700)':'var(--color-neutral-300)'})),
+   sens:f.sens||'—',sensStyle:sensStyle(f.sens),status,statusStyle,toggle:toggle(f.id),open:()=>this.setState({drawer:{kind:'file',id:f.id}}),
+   rowStyle:{display:'grid',gridTemplateColumns:'40px minmax(0,2.6fr) 52px 70px 92px 96px minmax(0,1.25fr) 92px 40px',alignItems:'center',borderBottom:'1px solid color-mix(in srgb, var(--color-text) 8%, transparent)',opacity:f.bad?.7:f.inc?1:.72,background:S.drawer&&S.drawer.id===f.id?'color-mix(in srgb, var(--color-accent) 8%, transparent)':'transparent',transition:'opacity .2s, background .2s'}};});
+  const allOn=readable.length>0&&included.length===readable.length;
+  // revision diff
+  const rep=S.report;let impacts=[],revisionNote='';
+  if(rep&&S.revising){const cur=included.map(f=>f.id);const rem=rep.snap.filter(i=>!cur.includes(i));const add=cur.filter(i=>!rep.snap.includes(i));
+   revisionNote=!rem.length&&!add.length?'No changes yet. Include or exclude files, then regenerate.':`${add.length} added · ${rem.length} removed versus v${rep.v}.`;}
+  // generation
+  const g=S.gen;let stages=[],notes=[],genPct='0%',genBar={},genTitle='',genSub='';
+  if(g&&S.intakeId){const rawEvents=g.events||[];const rows=curateRunEvents(rawEvents);stages=rows.map((row,i)=>{const e=row.event;const isActive=e.status==='running'&&i===rows.length-1&&!g.done;const isWarn=e.status==='warning'||e.status==='failed';const t=new Date(e.occurred_at);const details=(row.details||[]).map(d=>{const dt=new Date(d.occurred_at);return {label:d.label,detail:d.detail||'',hasDetail:!!d.detail,time:Number.isNaN(dt.getTime())?'':dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})};});const liveDetails=row.detailsOpen?details.slice(-6):[];const collapsedDetails=row.detailsOpen?details.slice(0,-6):details;return {label:e.label,detail:e.detail||((e.kind==='subagent'?'Subagent':'Agent')+' activity recorded.'),isDone:!isActive&&!isWarn,isActive,isWarn,isPending:false,time:Number.isNaN(t.getTime())?'':t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),liveDetails,collapsedDetails,detailCount:collapsedDetails.length,hasLiveDetails:liveDetails.length>0,hasCollapsedDetails:collapsedDetails.length>0,rowStyle:{display:'flex',alignItems:'center',gap:14,padding:'12px 18px',borderBottom:i<rows.length-1?'1px solid color-mix(in srgb, var(--color-text) 8%, transparent)':'none',opacity:1,background:isActive?'color-mix(in srgb, var(--color-accent) 6%, transparent)':'transparent'}};});
+   if(!stages.length)stages=[{label:g.done?'Profile ready':'Report job queued',detail:g.done?'This report predates structured event capture.':`Preparing ${g.snap.length} approved sources for the orchestrator.`,isDone:g.done,isActive:!g.done,isWarn:false,isPending:false,time:g.done?'Done':'Now',rowStyle:{display:'flex',alignItems:'center',gap:14,padding:'12px 18px',opacity:1,background:g.done?'transparent':'color-mix(in srgb, var(--color-accent) 6%, transparent)'}}];
+   notes=[];genPct=g.done?'Done':'Live';genBar={height:'100%',width:'100%',background:g.done?'var(--color-accent-700)':'linear-gradient(90deg,var(--color-accent-300),var(--color-accent-700),var(--color-accent-300))',transition:'width .6s ease'};genTitle=g.done?'Profile ready':'Building profile: '+S.company;genSub=g.done?`Analysis complete · ${g.snap.length} approved sources`:'Analyzing approved sources, validating key metrics, and assembling the one-pager.';}
+  // report
+  let bottomLine=null,briefQuestions=[],reportIssues=[];
+  let items={},reportSections=[],sourceKey=[],regenNote={show:false};
+  const sel={};const open={};
+  if(rep){const b=buildApiItems(rep.api,files);items={...b.it};
+   (b.sections||[]).forEach(section=>section.findings.forEach(f=>{items[f.id]=f;}));
+   const dId=S.drawer&&S.drawer.kind==='item'?S.drawer.id:null;
+   Object.keys(items).forEach(k=>{sel[k]=dId===k;open[k]=()=>this.setState({drawer:{kind:'item',id:k}});});
+   bottomLine=b.bottomLine||null;briefQuestions=b.questions||[];reportIssues=b.issues||[];
+   reportSections=b.sections.map(section=>({...section,hasSummary:!!section.summary,findings:section.findings.map(f=>({...f,open:open[f.id],sel:sel[f.id],isMetric:!f.isNarrative,hasConflicts:f.conflictsView.length>0,conflictStyle:WARN}))}));
+   sourceKey=b.approved.map(f=>({num:b.num[f.id],n:f.n,k:f.k,date:f.d||'Not dated',sens:f.sens}));
+   if(rep.prevSnap){const rem=rep.prevSnap.filter(i=>!rep.snap.includes(i)).map(i=>(files.find(f=>f.id===i)||{k:i}).k.toLowerCase());const add=rep.snap.filter(i=>!rep.prevSnap.includes(i)).map(i=>(files.find(f=>f.id===i)||{k:i}).k.toLowerCase());
+    regenNote={show:true,text:(rem.length||add.length)?[add.length?'Added: '+add.join(', ')+'.':'',rem.length?'Removed: '+rem.join(', ')+'.':''].join(' ')+' Affected sections were recomputed.':'Same source set; all sections recomputed.'};}
+  }
+  // drawer
+  let d={kicker:''};const dr=S.drawer;
+  if(dr&&dr.kind==='item'&&items[dr.id]){const x=items[dr.id];
+   d={isItem:true,kicker:x.status==='Calculated'?'Calculation & evidence':x.status==='Estimated'?'Methodology & evidence':'Supporting evidence',title:x.title,value:x.value,isNarrative:!!x.isNarrative,isMetric:!x.isNarrative,showSummary:!x.isNarrative,chip:x.chip,meter:x.meter,confLabel:x.confLabel,fresh:x.fresh,summary:x.summary,
+    hasCalc:!!(x.calc&&x.calc.length),calc:(x.calc||[]).map(l=>({t:l.t,style:{fontSize:l.b===2?20:l.b===1?13:15,fontFamily:l.b===2?'var(--font-heading)':'var(--font-body)',fontWeight:l.b?600:400,color:l.b===1?'var(--color-neutral-700)':'var(--color-text)',paddingTop:l.b===2?4:0}})),
+    inputs:(x.inputs||[]).map(n=>({...n,chip:chip(n.st)})),hasRubric:!!(x.rubric&&x.rubric.length),rubric:x.rubric,score:x.score,
+    evidence:x.evidenceView,noEvidence:!x.evidenceView.length,hasConflicts:x.conflictsView.length>0,conflicts:x.conflictsView,
+    method:x.method,assumptions:x.assumptions.length?x.assumptions:['None beyond the methodology.'],hasMissing:x.missing.length>0,missing:x.missing};}
+  else if(dr&&dr.kind==='file'){const f=files.find(z=>z.id===dr.id);if(f){const [status,statusStyle]=statusOf(f);d={isFile:true,kicker:'File preview',f:{...f,size:mb(f.s),date:f.d||'Not dated',relLabel:relLabel(f.rel),sens:f.sens||'—',meta:f.meta||'—',sub:f.bad,readable:!f.bad,status,statusStyle,toggle:toggle(f.id),toggleLabel:f.inc?'Exclude from analysis':'Include in analysis'}};}}
+  else if(dr&&dr.kind==='sources'){d={isSources:true,kicker:'Approved source set'};}
+  const isOpen=!!dr&&(d.isItem||d.isFile||d.isSources);
+  const profileRows=S.profiles.map(p=>{const active=!!p.active_job_id&&(p.job_status==='queued'||p.job_status==='running');const ready=!!p.latest_report_id&&!active;const failed=p.job_status==='failed'&&!p.latest_report_id;const awaiting=p.status==='awaiting_approval';const group=ready?'ready':'progress';const stage=ready?3:2;const displayAt=ready&&p.latest_report_generated_at?p.latest_report_generated_at:p.updated_at;const updated=new Date(displayAt).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});return {...p,active,group,company:p.company_name,archive:p.archive_name,statusLabel:active?'Generating':ready?'Ready':failed?'Generation failed':awaiting?'Awaiting approval':'Approved · ready',next:active?'View progress':ready?'Open one-pager':failed?'Review and retry':awaiting?'Review AI source selection':'Generate one-pager',updated,open:()=>this.loadPersisted(p),key:e=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();this.loadPersisted(p);}},askDelete:e=>{e.stopPropagation();this.setState({confirmDel:p,deleteError:null});},deleteLabel:`Delete ${p.company_name}`,pips:[1,2,3].map(i=>({width:18,height:4,background:i<=stage?'var(--color-accent-700)':'var(--color-neutral-300)'})),statusStyle:ready?tagStyle('var(--color-accent-100)','var(--color-accent-800)','var(--color-accent-300)'):{...CHIP_BASE,color:failed?'oklch(0.4 0.13 28)':'var(--color-accent-800)',border:'1px dashed '+(failed?'oklch(0.7 0.10 28)':'var(--color-accent-600)')}};});
+  const query=S.q.trim().toLowerCase();const homeRows=profileRows.filter(p=>(S.filter==='all'||p.group===S.filter)&&(!query||p.company.toLowerCase().includes(query)));
+  const counts={all:profileRows.length,progress:profileRows.filter(p=>p.group==='progress').length,ready:profileRows.filter(p=>p.group==='ready').length};
+  const filterOpts=[['all','All'],['progress','In progress'],['ready','Ready']].map(([key,label])=>({label:`${label} · ${counts[key]}`,checked:S.filter===key,onChange:()=>this.setState({filter:key})}));
+  const dj=S.confirmDel;const del={show:!!dj,company:dj?dj.company_name:'',body:!dj?'':dj.active?'This profile is currently generating. Wait for it to finish before deleting it.':dj.latest_report_id?'The one-pager, citations, approved source set, and uploaded files will be removed from the workspace.':'This draft intake and its uploaded files will be removed from the workspace.',cancel:()=>{if(!S.deleteBusy)this.setState({confirmDel:null,deleteError:null});},stop:e=>e.stopPropagation(),confirm:this.confirmDelete,busy:S.deleteBusy,disabled:S.deleteBusy||!!dj?.active,label:S.deleteBusy?'Deleting…':'Delete profile',hasError:!!S.deleteError,error:S.deleteError,toast:!!S.undo,toastText:S.undo?(S.undo.error||`${S.undo.company} deleted.`):'',undo:this.undoDelete,undoBusy:S.undoBusy,undoLabel:S.undoBusy?'Restoring…':'Undo'};
+  return {
+   isHome:st==='home',inJob:st!=='home',goHome:this.goHome,newProfile:this.newProfile,del,homeRows,homeEmpty:homeRows.length===0,filterOpts,q:S.q,setQ:e=>this.setState({q:e.target.value}),
+   steps,isIntake:st==='intake',isReview:st==='review',isGen:st==='generating',isReport:st==='report'&&!!rep,
+   company:S.company,context:S.context,contextShown:S.context.trim()||'No additional context supplied.',demoPrefill:this.demoPrefill,demoPrefillDisabled:!!up,
+   setCompany:e=>this.setState({company:e.target.value}),setContext:e=>this.setState({context:e.target.value}),
+   fileRef:this.fileRef,browse:()=>this.fileRef.current&&this.fileRef.current.click(),
+   onFileInput:e=>{const f=e.target.files&&e.target.files[0];if(f)this.uploadZip(f);e.target.value='';},
+   onDragOver:e=>{e.preventDefault();if(!S.drag)this.setState({drag:true});},onDragLeave:()=>this.setState({drag:false}),
+   onDrop:e=>{e.preventDefault();this.setState({drag:false});const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)this.uploadZip(f);},
+   dropStyle:{display:'flex',flexDirection:'column',alignItems:'center',gap:6,padding:'30px 20px',border:'1px dashed '+(S.drag?'var(--color-accent)':'var(--color-neutral-500)'),background:S.drag?'color-mix(in srgb, var(--color-accent) 8%, transparent)':'transparent',textAlign:'center',transition:'background .15s, border-color .15s'},
+   up:upV,clearUpload:this.clearUpload,
+   cantContinue,continueHint,toReview:()=>this.setState(s=>({step:'review',visited:{...s.visited,review:true}})),toIntake:()=>this.go('intake'),
+   zipName:up&&up.status==='done'?up.name:'None attached',rows,noFiles:files.length===0,allOn,
+   toggleAll:()=>this.setFiles(f=>f.bad?f:{...f,inc:!allOn}),selAll:()=>this.setFiles(f=>f.bad?f:{...f,inc:true}),selNone:()=>this.setFiles(f=>f.bad?f:{...f,inc:false}),
+   sum:{detected:files.length,included:included.length,excluded:readable.length-included.length,bad:bad.length,hasBad:bad.length>0,size:mb(incSize)},
+   confirmed:S.confirmed&&included.length>0,toggleConfirm:()=>this.setState(s=>({confirmed:!s.confirmed})),noIncluded:included.length===0,
+   fastReview:S.fastReview,toggleFastReview:()=>this.setState(s=>({fastReview:!s.fastReview})),
+   reportAgentModel:S.reportAgentModel,setReportAgentModel:e=>this.setState({reportAgentModel:e.target.value}),
+   cantGen:!(S.confirmed&&included.length>0)||S.approvalBusy,genLabel:S.approvalBusy?'Approving sources…':S.revising?'Approve & regenerate':'Approve & generate profile',
+   genHint:S.approvalError?S.approvalError:included.length===0?'Include at least one readable source.':!S.confirmed?'Confirm approval to continue.':'Generation takes about a minute.',
+   startGen:this.startGen,revising:S.revising,revisionNote,impacts,reportV:rep?rep.v:1,backToReport:()=>this.setState({step:'report',revising:false,files:S.files.map(f=>({...f,inc:f.bad?f.inc:rep.snap.includes(f.id)})),confirmed:true}),
+   stages,notes,hasNotes:notes.length>0,notesCount:notes.length,genPct,genBar,genTitle,genSub,genDone:!!g&&g.done,genRunning:!!g&&!g.done,
+   generationExitLabel:'Return to profiles',cancelGen:this.goHome,openReport:()=>{if(S.report){history.replaceState(null,'',`/report/${encodeURIComponent(S.intakeId)}`);this.setState({step:'report',jobId:null,gen:null});}},
+   spinner:React.createElement('span',{style:{display:'inline-block',width:14,height:14,flex:'none',border:'1.5px solid var(--color-accent-300)',borderTopColor:'var(--color-accent-800)',borderRadius:'50%',animation:'spin .8s linear infinite'}}),
+   bottomLine,hasBottomLine:!!bottomLine,briefQuestions,hasQuestions:briefQuestions.length>0,reportIssues,hasIssues:reportIssues.length>0,
+   items,reportSections,sel,open,sourceKey,regenNote,reportAt:rep?rep.at:'',approvedCount:rep?rep.snap.length:0,
+   revise:()=>this.go('review'),openSources:()=>this.setState({drawer:{kind:'sources'}}),
+   d,closeDrawer:()=>this.setState({drawer:null}),
+   drawerStyle:{position:'fixed',top:56,right:0,bottom:0,width:'min(520px, 100vw)',zIndex:40,background:'var(--color-bg)',borderLeft:'1px solid var(--color-divider)',boxShadow:isOpen?'var(--shadow-lg)':'none',overflowY:'auto',transform:isOpen?'translateX(0)':'translateX(100%)',transition:'transform .32s cubic-bezier(.2,.7,.2,1), box-shadow .32s, visibility .32s',visibility:isOpen?'visible':'hidden'},
+   backdropStyle:{position:'fixed',top:56,left:0,right:0,bottom:0,zIndex:35,background:'color-mix(in srgb, var(--color-neutral-900) 18%, transparent)',opacity:isOpen?1:0,pointerEvents:isOpen?'auto':'none',transition:'opacity .3s'},
+  };
+ }
+}
+</script>
+</body>
+</html>

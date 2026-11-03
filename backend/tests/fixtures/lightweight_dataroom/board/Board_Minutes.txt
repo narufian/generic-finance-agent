@@ -1,0 +1,3 @@
+SYNTHETIC BOARD MINUTES
+
+This restricted test document exists to verify that sensitive-looking files are excluded by default.

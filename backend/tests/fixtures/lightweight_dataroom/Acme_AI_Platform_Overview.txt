@@ -1,0 +1,5 @@
+ACME AI PLATFORM — SYNTHETIC PRODUCT NOTE
+
+Document classification and field extraction run in every customer workflow.
+Acme fine-tunes third-party models on synthetic procurement records for this test fixture.
+All generated recommendations require human approval before they update customer systems.

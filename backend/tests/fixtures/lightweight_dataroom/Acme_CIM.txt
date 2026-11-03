@@ -1,0 +1,7 @@
+ACME TECHNOLOGIES — SYNTHETIC CONFIDENTIAL INFORMATION MEMORANDUM
+
+Acme sells an AI-assisted procurement platform to mid-market enterprises under annual subscriptions.
+At 30 June 2026, management reported $12.0 million of annual recurring revenue across 48 customers.
+Subscription revenue represents 90% of revenue; usage-based document processing represents 10%.
+
+This document is synthetic and exists only for Project Redwood tests.

@@ -1,0 +1,341 @@
+{
+  "id": "report-redwood-001",
+  "company_id": "company-redwood",
+  "company_name": "Redwood Systems",
+  "source_snapshot_id": "snapshot-redwood-001",
+  "approved_source_ids": [
+    "source-cim",
+    "source-model",
+    "source-debt",
+    "source-product"
+  ],
+  "generated_at": "2026-10-19T17:00:00-04:00",
+  "status": "partial",
+  "sections": [
+    {
+      "id": "section-business-model",
+      "section_type": "business_model",
+      "title": "Business model",
+      "summary": "Enterprise workflow software sold through annual subscriptions.",
+      "status": "complete",
+      "order": 0,
+      "findings": [
+        {
+          "id": "finding-business-model",
+          "label": "Business model",
+          "status": "reported",
+          "evidence_strength": {
+            "level": "strong",
+            "directness": "direct",
+            "source_count": 1,
+            "has_conflicts": false,
+            "latest_source_date": "2026-09-30",
+            "reasons": [
+              "The business model is described directly in the current management presentation."
+            ]
+          },
+          "citations": [
+            {
+              "id": "citation-business-model",
+              "source_id": "source-cim",
+              "source_name": "Confidential Information Memorandum.pdf",
+              "location": {
+                "page": 8,
+                "section": "Company overview",
+                "sheet": null,
+                "cell_range": null
+              },
+              "excerpt": "Subscription revenue is generated primarily through annual enterprise contracts."
+            }
+          ],
+          "assumptions": [],
+          "methodology": null,
+          "conflicts": [],
+          "answers": [],
+          "type": "text",
+          "value": "Redwood sells workflow automation software to large enterprises through annual subscription contracts, supplemented by implementation services."
+        }
+      ]
+    },
+    {
+      "id": "section-revenue",
+      "section_type": "revenue",
+      "title": "Revenue and ARR",
+      "summary": "Estimated ARR is $84 million as of September 2026.",
+      "status": "complete",
+      "order": 1,
+      "findings": [
+        {
+          "id": "finding-arr",
+          "label": "Annual recurring revenue",
+          "status": "estimated",
+          "evidence_strength": {
+            "level": "moderate",
+            "directness": "inferred",
+            "source_count": 2,
+            "has_conflicts": true,
+            "latest_source_date": "2026-09-30",
+            "reasons": [
+              "ARR is annualized from a current recurring-revenue export but is not reconciled to audited statements.",
+              "The management presentation reports a lower ARR value for the same period."
+            ]
+          },
+          "citations": [
+            {
+              "id": "citation-arr",
+              "source_id": "source-model",
+              "source_name": "Redwood Financial Model.xlsx",
+              "location": {
+                "page": null,
+                "section": null,
+                "sheet": "Revenue Build",
+                "cell_range": "N18:N142"
+              },
+              "excerpt": null
+            },
+            {
+              "id": "citation-arr-cim",
+              "source_id": "source-cim",
+              "source_name": "Confidential Information Memorandum.pdf",
+              "location": {
+                "page": 17,
+                "section": "Key operating metrics",
+                "sheet": null,
+                "cell_range": null
+              },
+              "excerpt": "September 2026 ARR was $81 million."
+            }
+          ],
+          "assumptions": [
+            {
+              "id": "assumption-arr",
+              "description": "September recurring revenue is representative and can be annualized without a seasonal adjustment."
+            }
+          ],
+          "methodology": "Annualize the September 2026 recurring subscription revenue run rate.",
+          "conflicts": [
+            {
+              "id": "conflict-arr",
+              "description": "The recurring-revenue export implies $84 million of ARR, while the management presentation reports $81 million for September 2026.",
+              "citation_ids": [
+                "citation-arr",
+                "citation-arr-cim"
+              ]
+            }
+          ],
+          "answers": [],
+          "type": "number",
+          "value": "84000000",
+          "display_value": "$84m",
+          "unit": "USD",
+          "period": "2026-09-30",
+          "calculation": null
+        }
+      ]
+    },
+    {
+      "id": "section-leverage",
+      "section_type": "capitalization_and_leverage",
+      "title": "Capitalization and leverage",
+      "summary": "Net leverage is 3.5x based on LTM EBITDA.",
+      "status": "complete",
+      "order": 2,
+      "findings": [
+        {
+          "id": "finding-net-leverage",
+          "label": "Net leverage",
+          "status": "calculated",
+          "evidence_strength": {
+            "level": "strong",
+            "directness": "derived",
+            "source_count": 2,
+            "has_conflicts": false,
+            "latest_source_date": "2026-09-30",
+            "reasons": [
+              "All calculation inputs are directly reported in current approved sources.",
+              "The arithmetic is deterministic and reproducible."
+            ]
+          },
+          "citations": [
+            {
+              "id": "citation-debt",
+              "source_id": "source-debt",
+              "source_name": "Debt Schedule.xlsx",
+              "location": {
+                "page": null,
+                "section": null,
+                "sheet": "Summary",
+                "cell_range": "B8:B9"
+              },
+              "excerpt": null
+            },
+            {
+              "id": "citation-ebitda",
+              "source_id": "source-model",
+              "source_name": "Redwood Financial Model.xlsx",
+              "location": {
+                "page": null,
+                "section": null,
+                "sheet": "P&L",
+                "cell_range": "N44"
+              },
+              "excerpt": null
+            }
+          ],
+          "assumptions": [],
+          "methodology": "Subtract cash from total debt, then divide net debt by LTM EBITDA for the same reporting period.",
+          "conflicts": [],
+          "answers": [],
+          "type": "number",
+          "value": "3.452380952380952380952380952",
+          "display_value": "3.5x",
+          "unit": "multiple",
+          "period": "LTM Sep-2026",
+          "calculation": {
+            "artifact_id": "artifact-net-leverage",
+            "output_name": "net_leverage",
+            "expression": "(total_debt - cash) / ltm_ebitda",
+            "inputs": [
+              {
+                "name": "total_debt",
+                "value": "180000000",
+                "unit": "USD",
+                "citation_ids": [
+                  "citation-debt"
+                ]
+              },
+              {
+                "name": "cash",
+                "value": "35000000",
+                "unit": "USD",
+                "citation_ids": [
+                  "citation-debt"
+                ]
+              },
+              {
+                "name": "ltm_ebitda",
+                "value": "42000000",
+                "unit": "USD",
+                "citation_ids": [
+                  "citation-ebitda"
+                ]
+              }
+            ],
+            "result": "3.452380952380952380952380952"
+          }
+        }
+      ]
+    },
+    {
+      "id": "section-valuation",
+      "section_type": "valuation",
+      "title": "Valuation",
+      "summary": "A defensible valuation multiple is not available from the approved sources.",
+      "status": "unavailable",
+      "order": 3,
+      "findings": [
+        {
+          "id": "finding-valuation",
+          "label": "Enterprise value / ARR",
+          "status": "unavailable",
+          "evidence_strength": {
+            "level": "limited",
+            "directness": "inferred",
+            "source_count": 0,
+            "has_conflicts": false,
+            "latest_source_date": null,
+            "reasons": [
+              "No current enterprise value is present in the approved sources."
+            ]
+          },
+          "citations": [],
+          "assumptions": [],
+          "methodology": null,
+          "conflicts": [],
+          "answers": [],
+          "type": "number",
+          "value": null,
+          "display_value": null,
+          "unit": null,
+          "period": null,
+          "calculation": null
+        }
+      ]
+    },
+    {
+      "id": "section-ai-native",
+      "section_type": "ai_native_assessment",
+      "title": "AI-native assessment",
+      "summary": "Redwood is moderately AI-native.",
+      "status": "complete",
+      "order": 4,
+      "findings": [
+        {
+          "id": "finding-ai-native",
+          "label": "AI-native maturity",
+          "status": "assessed",
+          "evidence_strength": {
+            "level": "moderate",
+            "directness": "inferred",
+            "source_count": 1,
+            "has_conflicts": false,
+            "latest_source_date": "2026-08-15",
+            "reasons": [
+              "The assessment uses a documented rubric but relies primarily on management product materials."
+            ]
+          },
+          "citations": [
+            {
+              "id": "citation-ai-product",
+              "source_id": "source-product",
+              "source_name": "AI Product Strategy.pdf",
+              "location": {
+                "page": 12,
+                "section": "Model and data differentiation",
+                "sheet": null,
+                "cell_range": null
+              },
+              "excerpt": "Recommendations are refined using customer-specific workflow history."
+            }
+          ],
+          "assumptions": [],
+          "methodology": "Apply the Redwood AI-native rubric to product dependency, proprietary data, model differentiation, workflow integration, and defensibility.",
+          "conflicts": [],
+          "answers": [],
+          "type": "categorical",
+          "value": "Moderate",
+          "options": [
+            "Low",
+            "Moderate",
+            "High"
+          ],
+          "rationale": null
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "id": "issue-arr-conflict",
+      "severity": "warning",
+      "code": "CONFLICTING_VALUES",
+      "message": "Two approved sources provide different ARR values for September 2026.",
+      "scope_type": "finding",
+      "scope_id": "finding-arr",
+      "recoverable": true,
+      "user_action": "Confirm which ARR definition and source should control the report."
+    },
+    {
+      "id": "issue-valuation-unavailable",
+      "severity": "warning",
+      "code": "INSUFFICIENT_EVIDENCE",
+      "message": "Enterprise value is not present in the approved sources, so the valuation multiple cannot be calculated.",
+      "scope_type": "finding",
+      "scope_id": "finding-valuation",
+      "recoverable": true,
+      "user_action": "Approve a current capitalization table or valuation source and regenerate the valuation section."
+    }
+  ],
+  "questions": [],
+  "bottom_line": null
+}

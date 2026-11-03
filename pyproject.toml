@@ -1,0 +1,30 @@
+[project]
+name = "generic-finance-agent"
+version = "0.1.0"
+description = "Local proof-of-concept for evidence-backed company one-pagers"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "openpyxl>=3.1,<4",
+    "pydantic>=2.12,<3",
+    "pypdf>=6,<7",
+    "python-docx>=1.2,<2",
+    "python-dotenv>=1.1,<2",
+    "python-multipart>=0.0.20,<1",
+    "python-pptx>=1.0,<2",
+    "e2b>=2.5,<3",
+    "pydantic-ai-harness>=0.13,<0.14",
+    "pydantic-ai-slim[anthropic]>=2.57,<3",
+    "uvicorn[standard]>=0.34,<1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "pytest-asyncio>=0.24,<2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
+
