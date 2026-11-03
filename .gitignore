@@ -8,3 +8,5 @@ data/
 .dev-server.pid
 
 .DS_Store
+chat/node_modules/
+chat/dist/

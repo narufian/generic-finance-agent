@@ -9,10 +9,11 @@ from pathlib import Path
 from threading import Thread, current_thread
 from uuid import uuid4
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from pydantic_ai.ui.vercel_ai import VercelAIAdapter
 
 from finance_agent.analysis.models import (
     ReportJob,
@@ -27,6 +28,7 @@ from finance_agent.analysis.runner import (
     persist_report,
     persist_run,
 )
+from finance_agent.chat import build_chat_agent
 from finance_agent.config import load_live_settings
 from finance_agent.ingestion.classifier import PydanticSourceClassifier, SourceClassifier
 from finance_agent.ingestion.models import (
@@ -46,6 +48,7 @@ from finance_agent.reports.models import OnePager
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 WEB_ROOT = PROJECT_ROOT / "web"
+CHAT_DIST = PROJECT_ROOT / "chat" / "dist"
 service = IntakeService(PROJECT_ROOT / "data" / "intakes")
 app = FastAPI(title="Generic Finance Agent", version="0.1.0")
 report_workers: set[Thread] = set()
@@ -443,6 +446,29 @@ def profile_page(profile_id: str) -> FileResponse:
     except IntakeNotFoundError as exc:
         raise HTTPException(status_code=404, detail="profile not found") from exc
     return FileResponse(WEB_ROOT / "index.html")
+
+
+@app.post("/api/chat")
+async def chat(request: Request) -> Response:
+    """Stream a casual chat turn in the AI SDK v7 UI message protocol."""
+    try:
+        agent = build_chat_agent()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return await VercelAIAdapter.dispatch_request(request, agent=agent, sdk_version=7)
+
+
+if CHAT_DIST.is_dir():
+    app.mount("/chat", StaticFiles(directory=CHAT_DIST, html=True), name="chat")
+else:
+
+    @app.get("/chat", include_in_schema=False)
+    def chat_not_built() -> HTMLResponse:
+        return HTMLResponse(
+            "<p>The chat UI is not built. Run <code>just chat-build</code>, "
+            "or <code>just chat-dev</code> for the Vite dev server.</p>",
+            status_code=503,
+        )
 
 
 app.mount("/", StaticFiles(directory=WEB_ROOT, html=True), name="web")

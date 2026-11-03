@@ -75,3 +75,15 @@ logs:
 # Run the test suite.
 test:
     uv run pytest -q
+
+# Install the chat UI's dependencies.
+chat-install:
+    cd chat && npm install
+
+# Run the chat UI with hot reload at http://127.0.0.1:5173/chat/ (start the API with `just dev` too).
+chat-dev:
+    cd chat && npm run dev
+
+# Build the chat UI so the API serves it at /chat (restart the server afterwards).
+chat-build:
+    cd chat && npm run build

@@ -24,6 +24,16 @@ Or run the combined web app and API directly:
 uv run uvicorn finance_agent.api:app --app-dir backend --host 127.0.0.1 --port 3000
 ```
 
+### Chat
+
+A casual chat UI (Vite + React + the Vercel AI SDK's `useChat`) lives in `chat/`. It streams from `POST /api/chat`, which uses PydanticAI's `VercelAIAdapter`. Only the model key is needed, not E2B. The model is `FINANCE_AGENT_CHAT_MODEL`, falling back to `FINANCE_AGENT_MODEL`.
+
+```bash
+just chat-install
+just chat-build   # then restart the server; open http://127.0.0.1:3000/chat/
+just chat-dev     # or hot reload at http://127.0.0.1:5173/chat/ alongside `just dev`
+```
+
 Install the backend dependencies and run the model tests:
 
 ```bash
